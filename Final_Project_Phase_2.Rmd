@@ -1,0 +1,120 @@
+---
+title: "Summary of The Data and Explanation"
+output: html_document
+---
+
+## Acquisition and Introduction of the Data
+
+```{r setup, warning=FALSE,message=FALSE}
+# Temporary file for "Planning"
+planning_temp=tempfile(fileext=".xlsx")
+# Temporary file for "Production"
+production_temp=tempfile(fileext=".xlsx")
+# Temporary file for "Consumption"
+consumption_temp=tempfile(fileext=".xlsx")
+
+# Downloading file from repository to the "Planning" temp
+download.file("https://raw.githubusercontent.com/pjournal/mef03g-Kar-R-sizlar/master/4-year-planning.csv?raw=true",destfile=planning_temp,mode='wb')
+# Downloading file from repository to the "Production" temp
+download.file("https://raw.githubusercontent.com/pjournal/mef03g-Kar-R-sizlar/master/4-year-production.csv?raw=true",destfile=production_temp,mode='wb')
+# Downloading file from repository to the "Consumption" temp
+download.file("https://raw.githubusercontent.com/pjournal/mef03g-Kar-R-sizlar/master/4-year-consumption.csv?raw=true",destfile=consumption_temp,mode='wb')
+
+# Reading the csv files.
+planning_raw_data=read.csv(planning_temp,skip=1)
+production_raw_data=read.csv(production_temp,skip=1)
+consumption_raw_data=read.csv(consumption_temp,skip=1)
+
+# Removing the temp files
+file.remove(planning_temp)
+file.remove(production_temp)
+file.remove(consumption_temp)
+```
+
+### Preparation and Introduction of Planning Data
+
+* 4 Year Planning Data: This data includes 33599 rows and 15 variables for the planned pruduction between January 1st, 2016 and October 31st, 2019
+
+```{r}
+# Proper Column Names
+colnames(planning_raw_data) <-  c('tarih', 'saat', 'toplam_mwh', 'dogal_gaz', 'ruzgar', 'linyit', 'tas_komur', 'ithal_komur', 'fuel_oil', 'jeotermal', 'barajli', 'nafta', 'biyokutle', 'akarsu', 'diger')
+# Proper Data Format
+planning_raw_data[,3:15]  <- as.data.frame(lapply(planning_raw_data[,3:15], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+planning_raw_data$tarih <-as.character(planning_raw_data$tarih)
+planning_raw_data$saat <-as.character(planning_raw_data$saat)
+head(planning_raw_data, 10)
+```
+
+### Preparation and Introduction of Production Data
+
+* 4 Year Production Data: This data includes 33597 rows and 18 variables for the actual pruduction between January 1st, 2016 and October 31st, 2019
+
+```{r}
+# Defining Column Names
+colnames(production_raw_data) <-  c('tarih', 'saat', 'toplam_mwh', 'dogal_gaz', 'barajli', 'linyit', 'akarsu', 'ithal_komur', 'ruzgar', 'gunes', 'fuel_oil', 'jeotermal', 'asfaltit_komur', 'tas_komur', 'biyokutle', 'nafta', 'lng', 'uluslararasi')
+# Proper Data Format
+production_raw_data[,3:18]  <- as.data.frame(lapply(production_raw_data[,3:18], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+production_raw_data$tarih <-as.character(production_raw_data$tarih)
+production_raw_data$saat <-as.character(production_raw_data$saat)
+head(production_raw_data, 10)
+```
+
+### Preparation and Introduction of Consumption Data
+
+* 4 Year Consumpiton Data: This data includes 33575 rows and 3 variables for actual consumption between January 1st, 2016 and October 31st, 2019
+
+```{r}
+# Defining Column Names
+colnames(consumption_raw_data) <-  c('tarih', 'saat', 'tuketim_miktari_mwh')
+# Proper Data Format
+consumption_raw_data <-  cbind(consumption_raw_data, consumption_raw_data)
+consumption_raw_data[,3:6]  <- as.data.frame(lapply(consumption_raw_data[,3:6], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+consumption_raw_data <- consumption_raw_data[, 1:3]
+consumption_raw_data$tarih <-as.character(consumption_raw_data$tarih)
+consumption_raw_data$saat <-as.character(consumption_raw_data$saat)
+head(consumption_raw_data, 10)
+```
+
+```{r warning=FALSE,message=FALSE}
+# Creating RDS files
+saveRDS(planning_raw_data, file = "/Users/m2lmacbook1/Desktop/Phase 2 - Data Explanations/planning.rds")
+saveRDS(production_raw_data, file = "/Users/m2lmacbook1/Desktop/Phase 2 - Data Explanations/production.rds")
+saveRDS(consumption_raw_data, file = "/Users/m2lmacbook1/Desktop/Phase 2 - Data Explanations/consumption.rds")
+
+# Links to download RDS files from Group PJ
+# * [Planning](https://github.com/pjournal/mef03g-Kar-R-sizlar/blob/master/planning.rds)
+# * [Production](https://github.com/pjournal/mef03g-Kar-R-sizlar/blob/master/production.rds)
+# * [Consumpiton](https://github.com/pjournal/mef03g-Kar-R-sizlar/blob/master/consumption.rds)
+
+# Reading the RDS files from Group PJ 
+# Temporary file for "Planning"
+planning_temp_2=tempfile(fileext=".rds")
+# Temporary file for "Production"
+production_temp_2=tempfile(fileext=".rds")
+# Temporary file for "Consumption"
+consumption_temp_2=tempfile(fileext=".rds")
+
+# Downloading file from repository to the "Planning" temp
+download.file("https://github.com/pjournal/mef03g-Kar-R-sizlar/blob/master/planning.rds?raw=true",destfile=planning_temp_2,mode='wb')
+# Downloading file from repository to the "Production" temp
+download.file("https://github.com/pjournal/mef03g-Kar-R-sizlar/blob/master/production.rds?raw=true",destfile=production_temp_2,mode='wb')
+# Downloading file from repository to the "Consumption" temp
+download.file("https://github.com/pjournal/mef03g-Kar-R-sizlar/blob/master/consumption.rds?raw=true",destfile=consumption_temp_2,mode='wb')
+
+# Reading the RDS files
+planning_raw_data=read.csv(planning_temp_2)
+production_raw_data=read.csv(production_temp_2)
+consumption_raw_data=read.csv(consumption_temp_2)
+
+# Removing the temp files
+file.remove(planning_temp_2)
+file.remove(production_temp_2)
+file.remove(consumption_temp_2)
+```
+
+For more information on the topics below, please visit the [Project Proposal](https://pjournal.github.io/mef03g-Kar-R-sizlar/kar-r-sizlar-group-final-project-proposal.html) page;
+
+* Brief
+* Objectives
+* Plan
+* References
