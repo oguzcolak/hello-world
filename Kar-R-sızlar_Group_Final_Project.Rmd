@@ -1,0 +1,51 @@
+---
+title: "Energy Production & Consumption in Turkey"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Group Name: Kar-R-sızlar
+
+## Group Members:
+
+* [Mehtap Çolak](https://pjournal.github.io/mef03-mehtapmetinoglu/)
+* [Nazlı Tuğçe Uncu](https://pjournal.github.io/mef03-tugceu/)
+* [Bülent Büyük](https://pjournal.github.io/mef03-BulentBuyuk/)
+* [Oğuz Çolak](https://pjournal.github.io/mef03-oguzcolak/)
+
+## Brief
+This dataset contains energy consumption data, production data and the energy production sources in detail. Within the scope of the project, we plan to do the following analyzes.
+
+* 5 Year Planning Analysis: November 2014-2019
+General Graphics
+Distribution by Source
+* 5 Year Production Analysis: November 2014-2019
+General Graphics
+Distribution by Source
+* 5-Year Consumption Analysis: November 2014-2019
+General Graphic
+* Comparison of Planning and Actual Production
+* Comparison of Production and Consumption
+* Ratio of Renewable Energy Resources within 5 Years of Production
+* Ratio of Fossil Fuel and Natural Gas in 5 Years of Production
+
+Energy Exchange Istanbul (EXIST) was officially established on March 12, 2015. Its main objective and principal business activity is to “Plan, establish, develop and manage energy market within the market operation license in an effective, transparent, reliable manner that fulfills the requirements of energy market and to be an energy market management that procures reliable reference price without discriminating equivalent parties and maximizes the liquidity with increasing number of market participants, product range and trading volume as well as allowing to merchandise by means of market merger.”
+
+
+## Objectives
+* Differences between energy production and consumption in Turkey will be compared and the external dependence of Turkey in the energy sector will be analyzed.
+* 5-year plan data and actual production data will be compared and unusual factors in energy demand will be examined.
+* The development of the renewable energy sources in Turkey will be analyzed.
+
+
+## Plan
+* Cleaning, tidying and manipulating the data if necessary
+* Cleaning, tidying and manipulating the data if necessary
+* Using data visualizations
+* Specifying the consumption and production changes and the differences.
+* Specifying the external dependence of Turkey in the energy sector by comparing different datas.
+* Specifying the production through renewable energy sources.
+
+## References
+[EXIST / EPİAŞ](https://seffaflik.epias.com.tr/transparency/)
