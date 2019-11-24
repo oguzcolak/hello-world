@@ -1,0 +1,38 @@
+---
+title: "RMarkdown Homework"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+#### Oğuz Çolak
+#### September 22, 2019
+
+I have been working in the field of SEO (Search Engine Optimization) for more than 4 years and I am currently working as an SEO manager (after analyst and account manager positions respectively). Data is an invaluable and key factor in success in the entire digital marketing industry, including SEO. For this reason, it is very important to obtain accurate data and to analyze and interpret the relevant data in a healthy way. 
+
+My priority is to be able to develop myself professionally in the field of big data, while using data in my current projects in the most efficient way and achieving much more successful results.
+
+## UseR-2019 videos
+
+[useR! 2019 Toulouse - Talk Data Mining - Erin LeDell](https://www.youtube.com/watch?v=5EHHGBYaIqE)
+
+Erin LeDell (the maintainer of the h2o R package) made a presentation on Building and Benchmarking Automatic Machine Learning Systems. 
+
+At the beginning of her presentation she summarized the purposes of AutoML as trying to get the best model in terms of model performance in the least amount of time, reducing the human effort and expertise required a machine learning and improve performance of machine learning models that are being trained. Then she continued the presentation by mentioning the aspects of automatic machine learning and she categorized the different parts of AutoML as data preparation, model generation and (sort of optional) ensembles. Then she talked about machine learning benchmarking and explained it as (basically) comparing model and runtime performance of different machine learning tools. She also mentioned about some of the AutoML benchmarking mistakes and said that there was not enough data set and enough diversity within the data sets in a lot of the machine learning benchmarks that she had seen.
+
+She continued with her presentation by asking "Why is benchmarking so important for AutoML development?” question and then replied as follows; There is no “reference algorithm” in AutoML so we are creating new methods from scratch. It’s easy to overfit your tool to familiar datasets. Every time you make a change to the algorithm, you should justify the change via benchmarks. Then she finished her presentation by talking about a repo for the benchmark system that they created and the quallifications of an AutoML software.
+
+## #1 - mlr: Machine Learning in R
+[mlr: Machine Learning in R](http://www.jmlr.org/papers/volume17/15-066/15-066.pdf)
+
+This document contains basic information about Machine Learning through R and is useful for reviewing before Automatic Machine Learning.
+
+## #2 - Introduction to Automatic Machine Learning
+[Introduction to Automatic Machine Learning](https://blog.datascienceheroes.com/3-step-lesson-machine-learning/)
+
+This post is basically an introduction to Automatic Machine Learning and includes processes such as model building, model performing and model rebuilding (using R).
+
+## #3 - Automatic Machine Learning:Methods, Systems, Challenges
+[Automatic Machine Learning:Methods, Systems, Challenges](https://www.automl.org/wp-content/uploads/2018/12/automl_book.pdf)
+
+This document contains detailed information about Automatic Machine Learning and provides advanced information under the headings AutoML methods, AutoML systems, AutoML challenges in general. (Personally, I plan to review the document further and in detail in the future.).

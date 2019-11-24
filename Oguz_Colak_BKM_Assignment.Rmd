@@ -1,0 +1,80 @@
+---
+title: "Oguz Colak BKM Assignment"
+output: html_document
+---
+
+```{r warning=FALSE,message=FALSE}
+library(tidyverse)
+library(rvest)
+library(ggplot2)
+library(scales)
+```
+
+## Data Preparation
+
+```{r}
+bkm_sektor <- read_html("https://bkm.com.tr/secilen-aya-ait-sektorel-gelisim/?filter_year=2019&filter_month=6&List=Listele")
+
+tbls <- html_nodes(bkm_sektor, "table")
+head(tbls)
+
+tbls_ls <- bkm_sektor %>%
+  html_nodes("table") %>%
+  .[4] %>%
+  html_table(fill = TRUE)
+
+str(tbls_ls)
+head(tbls_ls[[1]], 5)
+tbls_ls[[1]] <- tbls_ls[[1]] %>% slice(3:28)
+head(tbls_ls[[1]], 28)
+```
+
+## Updating Column Names
+* isyeri_grubu: İşyeri Grubu
+* islem_adet_kredi_kart: İşlem Adedi (Kredi Kartı)
+* islem_adet_banka_kart: İşlem Adedi (Banka Kartı)
+* islem_tutar_kredi_kart: İşlem Tutarı / Milyon TL (Kredi Kartı)
+* islem_tutar_banka_kart: İşlem Tutarı / Milyon TL (Banka Kartı)
+  
+```{r}
+colnames(tbls_ls[[1]]) <- c("isyeri_grubu", "islem_adet_kredi_kart", "islem_adet_banka_kart",
+                            "islem_tutar_kredi_kart", "islem_tutar_banka_kart")
+head(tbls_ls[[1]], 28)
+```
+
+```{r}
+tbls_ls[[1]][,2:5]  <- as.data.frame(lapply(tbls_ls[[1]][,2:5], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+head(tbls_ls[[1]], 28)
+```
+
+## Analysis 1: Amount of Credit Card Transactions by Sector
+```{r}
+ggplot(tbls_ls[[1]], aes(x=isyeri_grubu, y=islem_adet_kredi_kart)) +
+  geom_bar(stat="identity",fill="steelblue")+ coord_flip() + scale_y_continuous(labels=comma) +
+  labs(title = "Amount of Credit Card Transactions by Sector", x="", y="") +theme_minimal()
+```
+
+##Analysis 2: Sectors with Total Credit and Debit Card Transactions Exceeding 2000
+```{r}
+islem_tutari_dagilim = tbls_ls[[1]] %>% 
+  transmute(isyeri_grubu, toplam_islem_tutari = islem_tutar_kredi_kart + islem_tutar_banka_kart) %>% 
+  arrange(desc(toplam_islem_tutari)) %>%
+
+mutate(isyeri_grubu = case_when(toplam_islem_tutari > 2000 ~ isyeri_grubu, TRUE ~ "OTHER")) %>% group_by(isyeri_grubu) %>% 
+  transmute(toplam_islem_tutari = sum(toplam_islem_tutari)) %>% distinct() %>%
+  arrange(desc(toplam_islem_tutari)) %>% ungroup() %>%
+mutate(dagilim = round(toplam_islem_tutari/sum(toplam_islem_tutari)*100,2))
+
+print(islem_tutari_dagilim)
+
+islem_tutari_dagilim %>% ggplot(data = ., aes(x = "", y = dagilim, fill = isyeri_grubu)) +
+  geom_bar(width = 1, stat = "identity", color = "black") +
+  coord_polar("y", start = 0)+
+  geom_text(aes(x = 1.3, y = dagilim, label = percent(dagilim/100) ),position = position_stack(vjust = 0.5),color = "black")+
+  labs(fill = "Sector")+
+  theme_void()
+```
+##To be continued :)
+
+##Sources
+[1: Scraping HTML Tables](http://bradleyboehmke.github.io/2015/12/scraping-html-tables.html)

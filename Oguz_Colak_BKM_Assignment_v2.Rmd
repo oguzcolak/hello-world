@@ -1,0 +1,236 @@
+---
+title: "Oğuz Çolak  BKM Assignment"
+output: html_document
+---
+
+```{r warning=FALSE,message=FALSE}
+library(tidyverse)
+library(rvest)
+library(ggplot2)
+library(scales)
+library(dplyr)
+```
+
+## Gathering Data
+ 
+```{r}
+filtered_date<- function(filtered_year,filtered_month) {
+  url <- paste('https://bkm.com.tr/secilen-aya-ait-sektorel-gelisim/?filter_year=',filtered_year,'&filter_month=',filtered_month,'&List=Listele', sep='', collapse = NULL)
+    return(url)
+}
+
+year_info <-c('2015','2016','2017','2018','2019')
+month_info <- c('01','02','03','04','05','06','07','08','09','10','11','12')
+gathered_data <- ''
+    
+for (i in 1:length(year_info)) {
+  for (j in 1:length(month_info)) {
+    if (year_info[i]=='2019' & month_info[j]=='07') {break}
+    url<-filtered_date(year_info[i],month_info[j])
+    page <- read_html(url)
+    df <- page%>%html_nodes("table") %>%.[(4)] %>% html_table(page, fill = TRUE,header = FALSE)  %>%  as.data.frame()
+    df <- df %>%mutate_if(is.numeric,funs(ifelse(is.na(.),0,.))) %>%  mutate(yearmonth=paste(year_info[i],month_info[j],sep='-'))
+    gathered_data<-rbind(gathered_data,df)
+  }
+}
+```
+
+## Preparing Data
+
+This process includes removing first column, updating column names and editing of numeric values.
+
+```{r}
+colnames(gathered_data) <- c("isyeri_grubu", "islem_adet_kredi_kart", "islem_adet_banka_kart",
+                            "islem_tutar_kredi_kart", "islem_tutar_banka_kart", "tarih")
+
+gathered_data <- gathered_data %>% slice(2:max(nrow(.))) %>% filter(isyeri_grubu !='TOPLAM')
+gathered_data <- gathered_data %>% filter(isyeri_grubu !='İşyeri Grubu')
+
+head(gathered_data, 5)
+```
+
+* isyeri_grubu: İşyeri Grubu
+* islem_adet_kredi_kart: İşlem Adedi (Kredi Kartı)
+* islem_adet_banka_kart: İşlem Adedi (Banka Kartı)
+* islem_tutar_kredi_kart: İşlem Tutarı / Milyon TL (Kredi Kartı)
+* islem_tutar_banka_kart: İşlem Tutarı / Milyon TL (Banka Kartı)
+* tarih: İşlem Tarihi (Yıl-Ay)
+
+```{r}
+gathered_data[,2:5]  <- as.data.frame(lapply(gathered_data[,2:5], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+head(gathered_data, 5)
+```
+
+## Analysis 1: Amount of Credit Card and Debit Card Transactions by Sector
+
+### 1.1: Preparing data 
+
+```{r}
+islem_adet_toplam<-gathered_data %>% mutate( toplam= (islem_adet_kredi_kart+islem_adet_banka_kart))%>% select(isyeri_grubu,tarih,toplam)%>%filter(toplam!=0)
+head(islem_adet_toplam, 5)
+```
+
+```{r}
+islem_adet_toplam_2015<-islem_adet_toplam %>% filter(grepl("^2015", tarih))
+islem_adet_toplam_2016<-islem_adet_toplam %>% filter(grepl("^2016", tarih))
+islem_adet_toplam_2017<-islem_adet_toplam %>% filter(grepl("^2017", tarih))
+islem_adet_toplam_2018<-islem_adet_toplam %>% filter(grepl("^2018", tarih))
+islem_adet_toplam_2019<-islem_adet_toplam %>% filter(grepl("^2019", tarih))
+```
+
+```{r}
+library(plyr)
+toplam_islem_adet_2015<-ddply(islem_adet_toplam_2015,"isyeri_grubu",numcolwise(sum))
+toplam_islem_adet_2016<-ddply(islem_adet_toplam_2016,"isyeri_grubu",numcolwise(sum))
+toplam_islem_adet_2017<-ddply(islem_adet_toplam_2017,"isyeri_grubu",numcolwise(sum))
+toplam_islem_adet_2018<-ddply(islem_adet_toplam_2018,"isyeri_grubu",numcolwise(sum))
+toplam_islem_adet_2019<-ddply(islem_adet_toplam_2019,"isyeri_grubu",numcolwise(sum))
+```
+
+```{r}
+yil_bilgisi <- rep("2015",length(toplam_islem_adet_2015))
+islem_adet_2015 <- cbind(toplam_islem_adet_2015, yil_bilgisi)
+yil_bilgisi <- rep("2016",length(toplam_islem_adet_2016))
+islem_adet_2016 <- cbind(toplam_islem_adet_2016, yil_bilgisi)
+yil_bilgisi <- rep("2017",length(toplam_islem_adet_2017))
+islem_adet_2017 <- cbind(toplam_islem_adet_2017, yil_bilgisi)
+yil_bilgisi <- rep("2018",length(toplam_islem_adet_2018))
+islem_adet_2018 <- cbind(toplam_islem_adet_2018, yil_bilgisi)
+yil_bilgisi <- rep("2019",length(toplam_islem_adet_2019))
+islem_adet_2019 <- cbind(toplam_islem_adet_2019, yil_bilgisi)
+toplam_islem_adet <- rbind(islem_adet_2015, islem_adet_2016, islem_adet_2017, islem_adet_2018, islem_adet_2019)
+toplam_islem_adet$yil_bilgisi <- as.character(toplam_islem_adet$yil_bilgisi)
+head(toplam_islem_adet, 5)
+```
+
+### 1.2: Annual Transactions on Sectoral Basis
+
+### General View
+
+```{r}
+ggplot(data = toplam_islem_adet, aes(x = yil_bilgisi, y = toplam/1000000, group = 1)) +
+    geom_line() +
+    facet_wrap(~ isyeri_grubu) +
+    labs(subtitle = "Annual Transactions on Sectoral Basis", y="Total Transaction (x1M)", x="Year")
+```
+
+### Annual Transactions on Sectoral Basis 2015
+
+```{r}
+library(ggplot2)
+library(dplyr)
+islem_adet_2015 %>%
+  tail(25) %>%
+  ggplot( aes(x=toplam/1000000, y=isyeri_grubu, group = 1)) +
+    geom_point(shape=21, color="black", fill="blue", size=6) +
+    labs(y="Sectors", x="Total Transaction (x1M)")+
+    ggtitle("Annual Transactions on Sectoral Basis 2015")
+```
+
+### Annual Transactions on Sectoral Basis 2016
+
+```{r}
+library(ggplot2)
+library(dplyr)
+islem_adet_2016 %>%
+  tail(25) %>%
+  ggplot( aes(x=toplam/1000000, y=isyeri_grubu, group = 1)) +
+    geom_point(shape=21, color="black", fill="blue", size=6) +
+    labs(y="Sectors", x="Total Transaction (x1M)")+
+    ggtitle("Annual Transactions on Sectoral Basis 2016")
+```
+
+### Annual Transactions on Sectoral Basis 2017
+
+```{r}
+library(ggplot2)
+library(dplyr)
+islem_adet_2017 %>%
+  tail(25) %>%
+  ggplot( aes(x=toplam/1000000, y=isyeri_grubu, group = 1)) +
+    geom_point(shape=21, color="black", fill="blue", size=6) +
+    labs(y="Sectors", x="Total Transaction (x1M)")+
+    ggtitle("Annual Transactions on Sectoral Basis 2017")
+```
+
+### Annual Transactions on Sectoral Basis 2018
+
+```{r}
+library(ggplot2)
+library(dplyr)
+islem_adet_2018 %>%
+  tail(25) %>%
+  ggplot( aes(x=toplam/1000000, y=isyeri_grubu, group = 1)) +
+    geom_point(shape=21, color="black", fill="blue", size=6) +
+    labs(y="Sectors", x="Total Transaction (x1M)")+
+    ggtitle("Annual Transactions on Sectoral Basis 2018")
+```
+
+### Annual Transactions on Sectoral Basis 2019 (January-June)
+
+```{r}
+library(ggplot2)
+library(dplyr)
+islem_adet_2019 %>%
+  tail(25) %>%
+  ggplot( aes(x=toplam/1000000, y=isyeri_grubu, group = 1)) +
+    geom_point(shape=21, color="black", fill="blue", size=6) +
+    labs(y="Sectors", x="Total Transaction (x1M)")+
+    ggtitle("Annual Transactions on Sectoral Basis 2019")
+```
+
+## Analysis 2: Total Annual Transactions on Year Basis
+
+### 2.1: Preparing Data
+
+```{r}
+ia_15<-sum(islem_adet_2015[2])
+ia_16<-sum(islem_adet_2016[2])
+ia_17<-sum(islem_adet_2017[2])
+ia_18<-sum(islem_adet_2018[2])
+ia_19<-sum(islem_adet_2019[2])
+yil_info=c("2015", "2016", "2017", "2018", "2019")
+yillik_toplam=c(ia_15,ia_16, ia_17, ia_18, ia_19)
+analysis_2=data.frame(yil_info, yillik_toplam)
+```
+
+### 2.2: Analysis
+
+```{r}
+library(ggplot2)
+library(dplyr)
+analysis_2 %>%
+  tail(10) %>%
+  ggplot( aes(x=yil_info, y=yillik_toplam/1000000, group = 1)) +
+    geom_line() +
+    geom_point(shape=21, color="black", fill="blue", size=6) +
+    labs(y="Total Transaction (x1M)", x="Year")+
+    ggtitle("Total Annual Transactions")
+```
+
+## Analysis 3: Top 5 Sectors of the Last 5 Years 
+
+### Preparing Data
+
+```{r}
+analysis_3 <- aggregate(toplam_islem_adet$toplam, by=list(isyeri_grubu=toplam_islem_adet$isyeri_grubu), FUN=sum)
+colnames(analysis_3) <- c("Sector", "tum_yillar_toplam")
+analysis_3 <- analysis_3[order(analysis_3$tum_yillar_toplam, decreasing = TRUE),]  
+analysis_3_top5 <- analysis_3 %>% slice(1:5)
+head(analysis_3_top5, 5)
+```
+
+### Top 5 Sectors
+
+```{r}
+library(ggplot2)
+ggplot(analysis_3_top5, aes(x="Sector", y=tum_yillar_toplam/1000000, fill=Sector)) +
+  geom_bar(stat="identity", width=1) +
+  labs(y="Total Transaction (x1M)", x="Sector")+
+  coord_polar("y", start=0)
+```
+
+### Sources
+* [Data visualization with ggplot2](https://bbolker.github.io/R-ecology-lesson/04-visualization-ggplot2.html)
+* [Scatterplot](https://www.r-graph-gallery.com/connected_scatterplot_ggplot2.html)
+
