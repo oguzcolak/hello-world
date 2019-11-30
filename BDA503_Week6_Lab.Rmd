@@ -1,0 +1,51 @@
+---
+title: "Oğuz Çolak | Week 6 Lab - Join Assignment"
+output: html_document
+---
+```{r warning=FALSE,message=FALSE}
+library(tidyverse)
+library(dplyr)
+load(file = "/Users/m2lmacbook1/Desktop/Courses/BDA 503 | Data Analytics Essentials/atp_tennis_data_2017.RData")
+```
+
+* Task 1: Rank countries by the singles champions.
+* Task 2: Rank countries which did not get any singles championships by the games. (Won when they win the match)
+* Task 3: Rank player ages by the single champions.
+* Task 4: List players over 30 years old who have never won a singles championship.
+
+## Task 1
+
+```{r}
+task1 <- inner_join(tourney_df, player_df, by = c("singles_winner_player_id"="player_id"))
+task1 %>%
+group_by(flag_code) %>% count(flag_code, sort=TRUE)
+```
+
+## Task 2
+
+```{r}
+nonchamp_players <-
+player_df %>% select(player_id, flag_code) %>% anti_join (.,task1)
+```
+
+```{r}
+nonchamp_players %>% left_join(.,score_df, by=c("player_id"="winner_player_id")) %>% 
+  group_by(flag_code) %>% summarise(total_won=sum(winner_games_won, na.rm=TRUE)) %>% arrange(desc(total_won)) 
+```
+
+## Task 3
+
+```{r}
+task3_a <- rank_df %>% distinct(player_id, .keep_all = TRUE) 
+task3 <- inner_join(tourney_df, task3_a, by = c("singles_winner_player_id"="player_id"))
+task3 %>%
+group_by(player_age) %>% count(player_age, sort=TRUE)
+```
+
+## Task 4
+
+```{r}
+task4_a <- task3_a %>% select(player_id, player_age) %>% filter(player_age > 30) %>% anti_join (.,task3)
+task4 <- player_df %>% select(player_id, first_name, last_name) %>% inner_join(.,task4_a) %>% arrange(desc(player_age))
+head(task4, 10)
+```
