@@ -2,7 +2,8 @@ Hello,
 
 This repository contains my progress on my Big Data Analytics journey. 
 
-I'm at the very beginning of the road and I have a lot to go. For the time being, I will be developing this repository of my lecture notes and assignments day by day, by adding my personal projects and analysis.
+I'm at the very beginning of the road and I have a lot to go. For the time being, I will be developing this repository day by day, by adding my personal projects, analysis and/or links to separate repositories for comprehensive personal projects.
+
 
 
 ## Contact Information
