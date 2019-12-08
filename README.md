@@ -30,6 +30,8 @@ I'm at the very beginning of the road and I have a lot to go. For the time being
 
 For group progress journal, please visit the [Kar'R'sızlar](https://pjournal.github.io/mef03g-Kar-R-sizlar/) page.
 
+[Comparison](https://oguzcolak.github.io/personal/Group-Project-Oguz-Colak.html) of Planning, Production and Consumption 
+
 ----------------------------------------------------------------------------------------
 
 ## Python
