@@ -17,6 +17,8 @@
 
 For group progress journal, please visit the [Kar'R'sızlar](https://pjournal.github.io/mef03g-Kar-R-sizlar/) page.
 
+[Comparison](https://oguzcolak.github.io/personal/Group-Project-Oguz-Colak.html) of Planning, Production and Consumption 
+
 ## Contact Information
 
 * Student ID: 311902034
