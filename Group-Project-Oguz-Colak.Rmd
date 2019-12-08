@@ -1,0 +1,1012 @@
+---
+title: "Group Project Oguz Colak"
+output: html_document
+---
+
+```{r warning=FALSE,message=FALSE}
+library(tidyverse)
+library(rvest)
+library(ggplot2)
+library(scales)
+library(dplyr)
+library(plyr)
+library(data.table)
+```
+
+## Acquisition and Introduction of the Data
+
+```{r setup, warning=FALSE,message=FALSE}
+# Temporary file for "Planning"
+planning_temp=tempfile(fileext=".xlsx")
+# Temporary file for "Production"
+production_temp=tempfile(fileext=".xlsx")
+# Temporary file for "Consumption"
+consumption_temp=tempfile(fileext=".xlsx")
+
+# Downloading file from repository to the "Planning" temp
+download.file("https://raw.githubusercontent.com/pjournal/mef03g-Kar-R-sizlar/master/4-year-planning.csv?raw=true",destfile=planning_temp,mode='wb')
+# Downloading file from repository to the "Production" temp
+download.file("https://raw.githubusercontent.com/pjournal/mef03g-Kar-R-sizlar/master/4-year-production.csv?raw=true",destfile=production_temp,mode='wb')
+# Downloading file from repository to the "Consumption" temp
+download.file("https://raw.githubusercontent.com/pjournal/mef03g-Kar-R-sizlar/master/4-year-consumption.csv?raw=true",destfile=consumption_temp,mode='wb')
+
+# Reading the csv files.
+planning_raw_data=read.csv(planning_temp,skip=1)
+production_raw_data=read.csv(production_temp,skip=1)
+consumption_raw_data=read.csv(consumption_temp,skip=1)
+
+# Removing the temp files
+file.remove(planning_temp)
+file.remove(production_temp)
+file.remove(consumption_temp)
+```
+
+### Preparation and Introduction of Planning Data
+
+* 4 Year Planning Data: This data includes 33599 rows and 15 variables for the planned pruduction between January 1st, 2016 and October 31st, 2019
+
+```{r}
+# Proper Column Names
+colnames(planning_raw_data) <-  c('tarih', 'saat', 'toplam_mwh', 'dogal_gaz', 'ruzgar', 'linyit', 'tas_komur', 'ithal_komur', 'fuel_oil', 'jeotermal', 'barajli', 'nafta', 'biyokutle', 'akarsu', 'diger')
+# Proper Data Format
+planning_raw_data[,3:15]  <- as.data.frame(lapply(planning_raw_data[,3:15], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+planning_raw_data$tarih <-as.character(planning_raw_data$tarih)
+planning_raw_data$saat <-as.character(planning_raw_data$saat)
+head(planning_raw_data, 5)
+```
+
+### Preparation and Introduction of Production Data
+
+* 4 Year Production Data: This data includes 33597 rows and 18 variables for the actual pruduction between January 1st, 2016 and October 31st, 2019
+
+```{r}
+# Defining Column Names
+colnames(production_raw_data) <-  c('tarih', 'saat', 'toplam_mwh', 'dogal_gaz', 'barajli', 'linyit', 'akarsu', 'ithal_komur', 'ruzgar', 'gunes', 'fuel_oil', 'jeotermal', 'asfaltit_komur', 'tas_komur', 'biyokutle', 'nafta', 'lng', 'uluslararasi')
+# Proper Data Format
+production_raw_data[,3:18]  <- as.data.frame(lapply(production_raw_data[,3:18], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+production_raw_data$tarih <-as.character(production_raw_data$tarih)
+production_raw_data$saat <-as.character(production_raw_data$saat)
+
+head(production_raw_data, 5)
+```
+
+### Preparation and Introduction of Consumption Data
+
+* 4 Year Consumpiton Data: This data includes 33575 rows and 3 variables for actual consumption between January 1st, 2016 and October 31st, 2019
+
+```{r}
+# Defining Column Names
+colnames(consumption_raw_data) <-  c('tarih', 'saat', 'tuketim_miktari_mwh')
+# Proper Data Format
+consumption_raw_data <-  cbind(consumption_raw_data, consumption_raw_data)
+consumption_raw_data[,3:6]  <- as.data.frame(lapply(consumption_raw_data[,3:6], function(x) as.numeric(gsub(",", ".", gsub("\\.", "", x)))))
+consumption_raw_data <- consumption_raw_data[, 1:3]
+consumption_raw_data$tarih <-as.character(consumption_raw_data$tarih)
+consumption_raw_data$saat <-as.character(consumption_raw_data$saat)
+
+head(consumption_raw_data, 5)
+```
+
+## Creating Monthly Sums for Planning
+
+```{r}
+jan2016_planning_1 <- planning_raw_data %>% filter(grepl("01.2016", tarih))
+jan_daily_2016_planning <- ddply(jan2016_planning_1,"tarih",numcolwise(sum))
+January_2016_Planning <- colSums(Filter(is.numeric, jan2016_planning_1))
+jan_monthly_2016_planning <- as.data.frame(January_2016_Planning)
+
+feb2016_planning_1 <- planning_raw_data %>% filter(grepl("02.2016", tarih))
+feb_daily_2016_planning <- ddply(feb2016_planning_1,"tarih",numcolwise(sum))
+February_2016_Planning <- colSums(Filter(is.numeric, feb2016_planning_1))
+feb_monthly_2016_planning <- as.data.frame(February_2016_Planning)
+
+mar2016_planning_1 <- planning_raw_data %>% filter(grepl("03.2016", tarih))
+mar_daily_2016_planning <- ddply(jan2016_planning_1,"tarih",numcolwise(sum))
+March_2016_Planning <- colSums(Filter(is.numeric, mar2016_planning_1))
+mar_monthly_2016_planning <- as.data.frame(March_2016_Planning)
+
+apr2016_planning_1 <- planning_raw_data %>% filter(grepl("04.2016", tarih))
+apr_daily_2016_planning <- ddply(apr2016_planning_1,"tarih",numcolwise(sum))
+April_2016_Planning <- colSums(Filter(is.numeric, apr2016_planning_1))
+apr_monthly_2016_planning <- as.data.frame(April_2016_Planning)
+
+may2016_planning_1 <- planning_raw_data %>% filter(grepl("05.2016", tarih))
+may_daily_2016_planning <- ddply(may2016_planning_1,"tarih",numcolwise(sum))
+May_2016_Planning <- colSums(Filter(is.numeric, may2016_planning_1))
+may_monthly_2016_planning <- as.data.frame(May_2016_Planning)
+
+jun2016_planning_1 <- planning_raw_data %>% filter(grepl("06.2016", tarih))
+jun_daily_2016_planning <- ddply(jun2016_planning_1,"tarih",numcolwise(sum))
+June_2016_Planning <- colSums(Filter(is.numeric, jun2016_planning_1))
+jun_monthly_2016_planning <- as.data.frame(June_2016_Planning)
+
+jul2016_planning_1 <- planning_raw_data %>% filter(grepl("07.2016", tarih))
+jul_daily_2016_planning <- ddply(jul2016_planning_1,"tarih",numcolwise(sum))
+July_2016_Planning <- colSums(Filter(is.numeric, jul2016_planning_1))
+jul_monthly_2016_planning <- as.data.frame(July_2016_Planning)
+
+aug2016_planning_1 <- planning_raw_data %>% filter(grepl("08.2016", tarih))
+aug_daily_2016_planning <- ddply(aug2016_planning_1,"tarih",numcolwise(sum))
+August_2016_Planning <- colSums(Filter(is.numeric, aug2016_planning_1))
+aug_monthly_2016_planning <- as.data.frame(August_2016_Planning)
+
+sep2016_planning_1 <- planning_raw_data %>% filter(grepl("09.2016", tarih))
+sep_daily_2016_planning <- ddply(sep2016_planning_1,"tarih",numcolwise(sum))
+September_2016_Planning <- colSums(Filter(is.numeric, sep2016_planning_1))
+sep_monthly_2016_planning <- as.data.frame(September_2016_Planning)
+
+oct2016_planning_1 <- planning_raw_data %>% filter(grepl("10.2016", tarih))
+oct_daily_2016_planning <- ddply(oct2016_planning_1,"tarih",numcolwise(sum))
+October_2016_Planning <- colSums(Filter(is.numeric, oct2016_planning_1))
+oct_monthly_2016_planning <- as.data.frame(October_2016_Planning)
+
+nov2016_planning_1 <- planning_raw_data %>% filter(grepl("11.2016", tarih))
+nov_daily_2016_planning <- ddply(nov2016_planning_1,"tarih",numcolwise(sum))
+November_2016_Planning <- colSums(Filter(is.numeric, nov2016_planning_1))
+nov_monthly_2016_planning <- as.data.frame(November_2016_Planning)
+
+dec2016_planning_1 <- planning_raw_data %>% filter(grepl("12.2016", tarih))
+dec_daily_2016_planning <- ddply(dec2016_planning_1,"tarih",numcolwise(sum))
+December_2016_Planning <- colSums(Filter(is.numeric, dec2016_planning_1))
+dec_monthly_2016_planning <- as.data.frame(December_2016_Planning)
+
+Planning_2016_Monthly <- cbind(jan_monthly_2016_planning, feb_monthly_2016_planning, mar_monthly_2016_planning, apr_monthly_2016_planning, may_monthly_2016_planning, jun_monthly_2016_planning, jul_monthly_2016_planning, aug_monthly_2016_planning, sep_monthly_2016_planning, oct_monthly_2016_planning, nov_monthly_2016_planning, dec_monthly_2016_planning)
+
+jan2017_planning_1 <- planning_raw_data %>% filter(grepl("01.2017", tarih))
+jan_daily_2017_planning <- ddply(jan2017_planning_1,"tarih",numcolwise(sum))
+January_2017_Planning <- colSums(Filter(is.numeric, jan2017_planning_1))
+jan_monthly_2017_planning <- as.data.frame(January_2017_Planning)
+
+feb2017_planning_1 <- planning_raw_data %>% filter(grepl("02.2017", tarih))
+feb_daily_2017_planning <- ddply(feb2017_planning_1,"tarih",numcolwise(sum))
+February_2017_Planning <- colSums(Filter(is.numeric, feb2017_planning_1))
+feb_monthly_2017_planning <- as.data.frame(February_2017_Planning)
+
+mar2017_planning_1 <- planning_raw_data %>% filter(grepl("03.2017", tarih))
+mar_daily_2017_planning <- ddply(jan2017_planning_1,"tarih",numcolwise(sum))
+March_2017_Planning <- colSums(Filter(is.numeric, mar2017_planning_1))
+mar_monthly_2017_planning <- as.data.frame(March_2017_Planning)
+
+apr2017_planning_1 <- planning_raw_data %>% filter(grepl("04.2017", tarih))
+apr_daily_2017_planning <- ddply(apr2017_planning_1,"tarih",numcolwise(sum))
+April_2017_Planning <- colSums(Filter(is.numeric, apr2017_planning_1))
+apr_monthly_2017_planning <- as.data.frame(April_2017_Planning)
+
+may2017_planning_1 <- planning_raw_data %>% filter(grepl("05.2017", tarih))
+may_daily_2017_planning <- ddply(may2017_planning_1,"tarih",numcolwise(sum))
+May_2017_Planning <- colSums(Filter(is.numeric, may2017_planning_1))
+may_monthly_2017_planning <- as.data.frame(May_2017_Planning)
+
+jun2017_planning_1 <- planning_raw_data %>% filter(grepl("06.2017", tarih))
+jun_daily_2017_planning <- ddply(jun2017_planning_1,"tarih",numcolwise(sum))
+June_2017_Planning <- colSums(Filter(is.numeric, jun2017_planning_1))
+jun_monthly_2017_planning <- as.data.frame(June_2017_Planning)
+
+jul2017_planning_1 <- planning_raw_data %>% filter(grepl("07.2017", tarih))
+jul_daily_2017_planning <- ddply(jul2017_planning_1,"tarih",numcolwise(sum))
+July_2017_Planning <- colSums(Filter(is.numeric, jul2017_planning_1))
+jul_monthly_2017_planning <- as.data.frame(July_2017_Planning)
+
+aug2017_planning_1 <- planning_raw_data %>% filter(grepl("08.2017", tarih))
+aug_daily_2017_planning <- ddply(aug2017_planning_1,"tarih",numcolwise(sum))
+August_2017_Planning <- colSums(Filter(is.numeric, aug2017_planning_1))
+aug_monthly_2017_planning <- as.data.frame(August_2017_Planning)
+
+sep2017_planning_1 <- planning_raw_data %>% filter(grepl("09.2017", tarih))
+sep_daily_2017_planning <- ddply(sep2017_planning_1,"tarih",numcolwise(sum))
+September_2017_Planning <- colSums(Filter(is.numeric, sep2017_planning_1))
+sep_monthly_2017_planning <- as.data.frame(September_2017_Planning)
+
+oct2017_planning_1 <- planning_raw_data %>% filter(grepl("10.2017", tarih))
+oct_daily_2017_planning <- ddply(oct2017_planning_1,"tarih",numcolwise(sum))
+October_2017_Planning <- colSums(Filter(is.numeric, oct2017_planning_1))
+oct_monthly_2017_planning <- as.data.frame(October_2017_Planning)
+
+nov2017_planning_1 <- planning_raw_data %>% filter(grepl("11.2017", tarih))
+nov_daily_2017_planning <- ddply(nov2017_planning_1,"tarih",numcolwise(sum))
+November_2017_Planning <- colSums(Filter(is.numeric, nov2017_planning_1))
+nov_monthly_2017_planning <- as.data.frame(November_2017_Planning)
+
+dec2017_planning_1 <- planning_raw_data %>% filter(grepl("12.2017", tarih))
+dec_daily_2017_planning <- ddply(dec2017_planning_1,"tarih",numcolwise(sum))
+December_2017_Planning <- colSums(Filter(is.numeric, dec2017_planning_1))
+dec_monthly_2017_planning <- as.data.frame(December_2017_Planning)
+
+Planning_2017_Monthly <- cbind(jan_monthly_2017_planning, feb_monthly_2017_planning, mar_monthly_2017_planning, apr_monthly_2017_planning, may_monthly_2017_planning, jun_monthly_2017_planning, jul_monthly_2017_planning, aug_monthly_2017_planning, sep_monthly_2017_planning, oct_monthly_2017_planning, nov_monthly_2017_planning, dec_monthly_2017_planning)
+
+jan2018_planning_1 <- planning_raw_data %>% filter(grepl("01.2018", tarih))
+jan_daily_2018_planning <- ddply(jan2018_planning_1,"tarih",numcolwise(sum))
+January_2018_Planning <- colSums(Filter(is.numeric, jan2018_planning_1))
+jan_monthly_2018_planning <- as.data.frame(January_2018_Planning)
+
+feb2018_planning_1 <- planning_raw_data %>% filter(grepl("02.2018", tarih))
+feb_daily_2018_planning <- ddply(feb2018_planning_1,"tarih",numcolwise(sum))
+February_2018_Planning <- colSums(Filter(is.numeric, feb2018_planning_1))
+feb_monthly_2018_planning <- as.data.frame(February_2018_Planning)
+
+mar2018_planning_1 <- planning_raw_data %>% filter(grepl("03.2018", tarih))
+mar_daily_2018_planning <- ddply(jan2018_planning_1,"tarih",numcolwise(sum))
+March_2018_Planning <- colSums(Filter(is.numeric, mar2018_planning_1))
+mar_monthly_2018_planning <- as.data.frame(March_2018_Planning)
+
+apr2018_planning_1 <- planning_raw_data %>% filter(grepl("04.2018", tarih))
+apr_daily_2018_planning <- ddply(apr2018_planning_1,"tarih",numcolwise(sum))
+April_2018_Planning <- colSums(Filter(is.numeric, apr2018_planning_1))
+apr_monthly_2018_planning <- as.data.frame(April_2018_Planning)
+
+may2018_planning_1 <- planning_raw_data %>% filter(grepl("05.2018", tarih))
+may_daily_2018_planning <- ddply(may2018_planning_1,"tarih",numcolwise(sum))
+May_2018_Planning <- colSums(Filter(is.numeric, may2018_planning_1))
+may_monthly_2018_planning <- as.data.frame(May_2018_Planning)
+
+jun2018_planning_1 <- planning_raw_data %>% filter(grepl("06.2018", tarih))
+jun_daily_2018_planning <- ddply(jun2018_planning_1,"tarih",numcolwise(sum))
+June_2018_Planning <- colSums(Filter(is.numeric, jun2018_planning_1))
+jun_monthly_2018_planning <- as.data.frame(June_2018_Planning)
+
+jul2018_planning_1 <- planning_raw_data %>% filter(grepl("07.2018", tarih))
+jul_daily_2018_planning <- ddply(jul2018_planning_1,"tarih",numcolwise(sum))
+July_2018_Planning <- colSums(Filter(is.numeric, jul2018_planning_1))
+jul_monthly_2018_planning <- as.data.frame(July_2018_Planning)
+
+aug2018_planning_1 <- planning_raw_data %>% filter(grepl("08.2018", tarih))
+aug_daily_2018_planning <- ddply(aug2018_planning_1,"tarih",numcolwise(sum))
+August_2018_Planning <- colSums(Filter(is.numeric, aug2018_planning_1))
+aug_monthly_2018_planning <- as.data.frame(August_2018_Planning)
+
+sep2018_planning_1 <- planning_raw_data %>% filter(grepl("09.2018", tarih))
+sep_daily_2018_planning <- ddply(sep2018_planning_1,"tarih",numcolwise(sum))
+September_2018_Planning <- colSums(Filter(is.numeric, sep2018_planning_1))
+sep_monthly_2018_planning <- as.data.frame(September_2018_Planning)
+
+oct2018_planning_1 <- planning_raw_data %>% filter(grepl("10.2018", tarih))
+oct_daily_2018_planning <- ddply(oct2018_planning_1,"tarih",numcolwise(sum))
+October_2018_Planning <- colSums(Filter(is.numeric, oct2018_planning_1))
+oct_monthly_2018_planning <- as.data.frame(October_2018_Planning)
+
+nov2018_planning_1 <- planning_raw_data %>% filter(grepl("11.2018", tarih))
+nov_daily_2018_planning <- ddply(nov2018_planning_1,"tarih",numcolwise(sum))
+November_2018_Planning <- colSums(Filter(is.numeric, nov2018_planning_1))
+nov_monthly_2018_planning <- as.data.frame(November_2018_Planning)
+
+dec2018_planning_1 <- planning_raw_data %>% filter(grepl("12.2018", tarih))
+dec_daily_2018_planning <- ddply(dec2018_planning_1,"tarih",numcolwise(sum))
+December_2018_Planning <- colSums(Filter(is.numeric, dec2018_planning_1))
+dec_monthly_2018_planning <- as.data.frame(December_2018_Planning)
+
+Planning_2018_Monthly <- cbind(jan_monthly_2018_planning, feb_monthly_2018_planning, mar_monthly_2018_planning, apr_monthly_2018_planning, may_monthly_2018_planning, jun_monthly_2018_planning, jul_monthly_2018_planning, aug_monthly_2018_planning, sep_monthly_2018_planning, oct_monthly_2018_planning, nov_monthly_2018_planning, dec_monthly_2018_planning)
+
+jan2019_planning_1 <- planning_raw_data %>% filter(grepl("01.2019", tarih))
+jan_daily_2019_planning <- ddply(jan2019_planning_1,"tarih",numcolwise(sum))
+January_2019_Planning <- colSums(Filter(is.numeric, jan2019_planning_1))
+jan_monthly_2019_planning <- as.data.frame(January_2019_Planning)
+
+feb2019_planning_1 <- planning_raw_data %>% filter(grepl("02.2019", tarih))
+feb_daily_2019_planning <- ddply(feb2019_planning_1,"tarih",numcolwise(sum))
+February_2019_Planning <- colSums(Filter(is.numeric, feb2019_planning_1))
+feb_monthly_2019_planning <- as.data.frame(February_2019_Planning)
+
+mar2019_planning_1 <- planning_raw_data %>% filter(grepl("03.2019", tarih))
+mar_daily_2019_planning <- ddply(jan2019_planning_1,"tarih",numcolwise(sum))
+March_2019_Planning <- colSums(Filter(is.numeric, mar2019_planning_1))
+mar_monthly_2019_planning <- as.data.frame(March_2019_Planning)
+
+apr2019_planning_1 <- planning_raw_data %>% filter(grepl("04.2019", tarih))
+apr_daily_2019_planning <- ddply(apr2019_planning_1,"tarih",numcolwise(sum))
+April_2019_Planning <- colSums(Filter(is.numeric, apr2019_planning_1))
+apr_monthly_2019_planning <- as.data.frame(April_2019_Planning)
+
+may2019_planning_1 <- planning_raw_data %>% filter(grepl("05.2019", tarih))
+may_daily_2019_planning <- ddply(may2019_planning_1,"tarih",numcolwise(sum))
+May_2019_Planning <- colSums(Filter(is.numeric, may2019_planning_1))
+may_monthly_2019_planning <- as.data.frame(May_2019_Planning)
+
+jun2019_planning_1 <- planning_raw_data %>% filter(grepl("06.2019", tarih))
+jun_daily_2019_planning <- ddply(jun2019_planning_1,"tarih",numcolwise(sum))
+June_2019_Planning <- colSums(Filter(is.numeric, jun2019_planning_1))
+jun_monthly_2019_planning <- as.data.frame(June_2019_Planning)
+
+jul2019_planning_1 <- planning_raw_data %>% filter(grepl("07.2019", tarih))
+jul_daily_2019_planning <- ddply(jul2019_planning_1,"tarih",numcolwise(sum))
+July_2019_Planning <- colSums(Filter(is.numeric, jul2019_planning_1))
+jul_monthly_2019_planning <- as.data.frame(July_2019_Planning)
+
+aug2019_planning_1 <- planning_raw_data %>% filter(grepl("08.2019", tarih))
+aug_daily_2019_planning <- ddply(aug2019_planning_1,"tarih",numcolwise(sum))
+August_2019_Planning <- colSums(Filter(is.numeric, aug2019_planning_1))
+aug_monthly_2019_planning <- as.data.frame(August_2019_Planning)
+
+sep2019_planning_1 <- planning_raw_data %>% filter(grepl("09.2019", tarih))
+sep_daily_2019_planning <- ddply(sep2019_planning_1,"tarih",numcolwise(sum))
+September_2019_Planning <- colSums(Filter(is.numeric, sep2019_planning_1))
+sep_monthly_2019_planning <- as.data.frame(September_2019_Planning)
+
+oct2019_planning_1 <- planning_raw_data %>% filter(grepl("10.2019", tarih))
+oct_daily_2019_planning <- ddply(oct2019_planning_1,"tarih",numcolwise(sum))
+October_2019_Planning <- colSums(Filter(is.numeric, oct2019_planning_1))
+oct_monthly_2019_planning <- as.data.frame(October_2019_Planning)
+
+Planning_2019_Monthly <- cbind(jan_monthly_2019_planning, feb_monthly_2019_planning, mar_monthly_2019_planning, apr_monthly_2019_planning, may_monthly_2019_planning, jun_monthly_2019_planning, jul_monthly_2019_planning, aug_monthly_2019_planning, sep_monthly_2019_planning, oct_monthly_2019_planning)
+
+Planning_Monthly <- cbind(Planning_2016_Monthly, Planning_2017_Monthly, Planning_2018_Monthly, Planning_2019_Monthly)
+Planning_Monthly <- rownames_to_column(Planning_Monthly, var = "Sources")
+
+head(Planning_Monthly, 5)
+```
+
+## Creating Monthly Sums for Production
+
+```{r}
+jan2016_production_1 <- production_raw_data %>% filter(grepl("01.2016", tarih))
+jan_daily_2016_production <- ddply(jan2016_production_1,"tarih",numcolwise(sum))
+January_2016_Production <- colSums(Filter(is.numeric, jan2016_production_1))
+jan_monthly_2016_production <- as.data.frame(January_2016_Production)
+
+feb2016_production_1 <- production_raw_data %>% filter(grepl("02.2016", tarih))
+feb_daily_2016_production <- ddply(feb2016_production_1,"tarih",numcolwise(sum))
+February_2016_Production <- colSums(Filter(is.numeric, feb2016_production_1))
+feb_monthly_2016_production <- as.data.frame(February_2016_Production)
+
+mar2016_production_1 <- production_raw_data %>% filter(grepl("03.2016", tarih))
+mar_daily_2016_production <- ddply(jan2016_production_1,"tarih",numcolwise(sum))
+March_2016_Production <- colSums(Filter(is.numeric, mar2016_production_1))
+mar_monthly_2016_production <- as.data.frame(March_2016_Production)
+
+apr2016_production_1 <- production_raw_data %>% filter(grepl("04.2016", tarih))
+apr_daily_2016_production <- ddply(apr2016_production_1,"tarih",numcolwise(sum))
+April_2016_Production <- colSums(Filter(is.numeric, apr2016_production_1))
+apr_monthly_2016_production <- as.data.frame(April_2016_Production)
+
+may2016_production_1 <- production_raw_data %>% filter(grepl("05.2016", tarih))
+may_daily_2016_production <- ddply(may2016_production_1,"tarih",numcolwise(sum))
+May_2016_Production <- colSums(Filter(is.numeric, may2016_production_1))
+may_monthly_2016_production <- as.data.frame(May_2016_Production)
+
+jun2016_production_1 <- production_raw_data %>% filter(grepl("06.2016", tarih))
+jun_daily_2016_production <- ddply(jun2016_production_1,"tarih",numcolwise(sum))
+June_2016_Production <- colSums(Filter(is.numeric, jun2016_production_1))
+jun_monthly_2016_production <- as.data.frame(June_2016_Production)
+
+jul2016_production_1 <- production_raw_data %>% filter(grepl("07.2016", tarih))
+jul_daily_2016_production <- ddply(jul2016_production_1,"tarih",numcolwise(sum))
+July_2016_Production <- colSums(Filter(is.numeric, jul2016_production_1))
+jul_monthly_2016_production <- as.data.frame(July_2016_Production)
+
+aug2016_production_1 <- production_raw_data %>% filter(grepl("08.2016", tarih))
+aug_daily_2016_production <- ddply(aug2016_production_1,"tarih",numcolwise(sum))
+August_2016_Production <- colSums(Filter(is.numeric, aug2016_production_1))
+aug_monthly_2016_production <- as.data.frame(August_2016_Production)
+
+sep2016_production_1 <- production_raw_data %>% filter(grepl("09.2016", tarih))
+sep_daily_2016_production <- ddply(sep2016_production_1,"tarih",numcolwise(sum))
+September_2016_Production <- colSums(Filter(is.numeric, sep2016_production_1))
+sep_monthly_2016_production <- as.data.frame(September_2016_Production)
+
+oct2016_production_1 <- production_raw_data %>% filter(grepl("10.2016", tarih))
+oct_daily_2016_production <- ddply(oct2016_production_1,"tarih",numcolwise(sum))
+October_2016_Production <- colSums(Filter(is.numeric, oct2016_production_1))
+oct_monthly_2016_production <- as.data.frame(October_2016_Production)
+
+nov2016_production_1 <- production_raw_data %>% filter(grepl("11.2016", tarih))
+nov_daily_2016_production <- ddply(nov2016_production_1,"tarih",numcolwise(sum))
+November_2016_Production <- colSums(Filter(is.numeric, nov2016_production_1))
+nov_monthly_2016_production <- as.data.frame(November_2016_Production)
+
+dec2016_production_1 <- production_raw_data %>% filter(grepl("12.2016", tarih))
+dec_daily_2016_production <- ddply(dec2016_production_1,"tarih",numcolwise(sum))
+December_2016_Production <- colSums(Filter(is.numeric, dec2016_production_1))
+dec_monthly_2016_production <- as.data.frame(December_2016_Production)
+
+Production_2016_Monthly <- cbind(jan_monthly_2016_production, feb_monthly_2016_production, mar_monthly_2016_production, apr_monthly_2016_production, may_monthly_2016_production, jun_monthly_2016_production, jul_monthly_2016_production, aug_monthly_2016_production, sep_monthly_2016_production, oct_monthly_2016_production, nov_monthly_2016_production, dec_monthly_2016_production)
+
+jan2017_production_1 <- production_raw_data %>% filter(grepl("01.2017", tarih))
+jan_daily_2017_production <- ddply(jan2017_production_1,"tarih",numcolwise(sum))
+January_2017_Production <- colSums(Filter(is.numeric, jan2017_production_1))
+jan_monthly_2017_production <- as.data.frame(January_2017_Production)
+
+feb2017_production_1 <- production_raw_data %>% filter(grepl("02.2017", tarih))
+feb_daily_2017_production <- ddply(feb2017_production_1,"tarih",numcolwise(sum))
+February_2017_Production <- colSums(Filter(is.numeric, feb2017_production_1))
+feb_monthly_2017_production <- as.data.frame(February_2017_Production)
+
+mar2017_production_1 <- production_raw_data %>% filter(grepl("03.2017", tarih))
+mar_daily_2017_production <- ddply(jan2017_production_1,"tarih",numcolwise(sum))
+March_2017_Production <- colSums(Filter(is.numeric, mar2017_production_1))
+mar_monthly_2017_production <- as.data.frame(March_2017_Production)
+
+apr2017_production_1 <- production_raw_data %>% filter(grepl("04.2017", tarih))
+apr_daily_2017_production <- ddply(apr2017_production_1,"tarih",numcolwise(sum))
+April_2017_Production <- colSums(Filter(is.numeric, apr2017_production_1))
+apr_monthly_2017_production <- as.data.frame(April_2017_Production)
+
+may2017_production_1 <- production_raw_data %>% filter(grepl("05.2017", tarih))
+may_daily_2017_production <- ddply(may2017_production_1,"tarih",numcolwise(sum))
+May_2017_Production <- colSums(Filter(is.numeric, may2017_production_1))
+may_monthly_2017_production <- as.data.frame(May_2017_Production)
+
+jun2017_production_1 <- production_raw_data %>% filter(grepl("06.2017", tarih))
+jun_daily_2017_production <- ddply(jun2017_production_1,"tarih",numcolwise(sum))
+June_2017_Production <- colSums(Filter(is.numeric, jun2017_production_1))
+jun_monthly_2017_production <- as.data.frame(June_2017_Production)
+
+jul2017_production_1 <- production_raw_data %>% filter(grepl("07.2017", tarih))
+jul_daily_2017_production <- ddply(jul2017_production_1,"tarih",numcolwise(sum))
+July_2017_Production <- colSums(Filter(is.numeric, jul2017_production_1))
+jul_monthly_2017_production <- as.data.frame(July_2017_Production)
+
+aug2017_production_1 <- production_raw_data %>% filter(grepl("08.2017", tarih))
+aug_daily_2017_production <- ddply(aug2017_production_1,"tarih",numcolwise(sum))
+August_2017_Production <- colSums(Filter(is.numeric, aug2017_production_1))
+aug_monthly_2017_production <- as.data.frame(August_2017_Production)
+
+sep2017_production_1 <- production_raw_data %>% filter(grepl("09.2017", tarih))
+sep_daily_2017_production <- ddply(sep2017_production_1,"tarih",numcolwise(sum))
+September_2017_Production <- colSums(Filter(is.numeric, sep2017_production_1))
+sep_monthly_2017_production <- as.data.frame(September_2017_Production)
+
+oct2017_production_1 <- production_raw_data %>% filter(grepl("10.2017", tarih))
+oct_daily_2017_production <- ddply(oct2017_production_1,"tarih",numcolwise(sum))
+October_2017_Production <- colSums(Filter(is.numeric, oct2017_production_1))
+oct_monthly_2017_production <- as.data.frame(October_2017_Production)
+
+nov2017_production_1 <- production_raw_data %>% filter(grepl("11.2017", tarih))
+nov_daily_2017_production <- ddply(nov2017_production_1,"tarih",numcolwise(sum))
+November_2017_Production <- colSums(Filter(is.numeric, nov2017_production_1))
+nov_monthly_2017_production <- as.data.frame(November_2017_Production)
+
+dec2017_production_1 <- production_raw_data %>% filter(grepl("12.2017", tarih))
+dec_daily_2017_production <- ddply(dec2017_production_1,"tarih",numcolwise(sum))
+December_2017_Production <- colSums(Filter(is.numeric, dec2017_production_1))
+dec_monthly_2017_production <- as.data.frame(December_2017_Production)
+
+Production_2017_Monthly <- cbind(jan_monthly_2017_production, feb_monthly_2017_production, mar_monthly_2017_production, apr_monthly_2017_production, may_monthly_2017_production, jun_monthly_2017_production, jul_monthly_2017_production, aug_monthly_2017_production, sep_monthly_2017_production, oct_monthly_2017_production, nov_monthly_2017_production, dec_monthly_2017_production)
+
+jan2018_production_1 <- production_raw_data %>% filter(grepl("01.2018", tarih))
+jan_daily_2018_production <- ddply(jan2018_production_1,"tarih",numcolwise(sum))
+January_2018_Production <- colSums(Filter(is.numeric, jan2018_production_1))
+jan_monthly_2018_production <- as.data.frame(January_2018_Production)
+
+feb2018_production_1 <- production_raw_data %>% filter(grepl("02.2018", tarih))
+feb_daily_2018_production <- ddply(feb2018_production_1,"tarih",numcolwise(sum))
+February_2018_Production <- colSums(Filter(is.numeric, feb2018_production_1))
+feb_monthly_2018_production <- as.data.frame(February_2018_Production)
+
+mar2018_production_1 <- production_raw_data %>% filter(grepl("03.2018", tarih))
+mar_daily_2018_production <- ddply(jan2018_production_1,"tarih",numcolwise(sum))
+March_2018_Production <- colSums(Filter(is.numeric, mar2018_production_1))
+mar_monthly_2018_production <- as.data.frame(March_2018_Production)
+
+apr2018_production_1 <- production_raw_data %>% filter(grepl("04.2018", tarih))
+apr_daily_2018_production <- ddply(apr2018_production_1,"tarih",numcolwise(sum))
+April_2018_Production <- colSums(Filter(is.numeric, apr2018_production_1))
+apr_monthly_2018_production <- as.data.frame(April_2018_Production)
+
+may2018_production_1 <- production_raw_data %>% filter(grepl("05.2018", tarih))
+may_daily_2018_production <- ddply(may2018_production_1,"tarih",numcolwise(sum))
+May_2018_Production <- colSums(Filter(is.numeric, may2018_production_1))
+may_monthly_2018_production <- as.data.frame(May_2018_Production)
+
+jun2018_production_1 <- production_raw_data %>% filter(grepl("06.2018", tarih))
+jun_daily_2018_production <- ddply(jun2018_production_1,"tarih",numcolwise(sum))
+June_2018_Production <- colSums(Filter(is.numeric, jun2018_production_1))
+jun_monthly_2018_production <- as.data.frame(June_2018_Production)
+
+jul2018_production_1 <- production_raw_data %>% filter(grepl("07.2018", tarih))
+jul_daily_2018_production <- ddply(jul2018_production_1,"tarih",numcolwise(sum))
+July_2018_Production <- colSums(Filter(is.numeric, jul2018_production_1))
+jul_monthly_2018_production <- as.data.frame(July_2018_Production)
+
+aug2018_production_1 <- production_raw_data %>% filter(grepl("08.2018", tarih))
+aug_daily_2018_production <- ddply(aug2018_production_1,"tarih",numcolwise(sum))
+August_2018_Production <- colSums(Filter(is.numeric, aug2018_production_1))
+aug_monthly_2018_production <- as.data.frame(August_2018_Production)
+
+sep2018_production_1 <- production_raw_data %>% filter(grepl("09.2018", tarih))
+sep_daily_2018_production <- ddply(sep2018_production_1,"tarih",numcolwise(sum))
+September_2018_Production <- colSums(Filter(is.numeric, sep2018_production_1))
+sep_monthly_2018_production <- as.data.frame(September_2018_Production)
+
+oct2018_production_1 <- production_raw_data %>% filter(grepl("10.2018", tarih))
+oct_daily_2018_production <- ddply(oct2018_production_1,"tarih",numcolwise(sum))
+October_2018_Production <- colSums(Filter(is.numeric, oct2018_production_1))
+oct_monthly_2018_production <- as.data.frame(October_2018_Production)
+
+nov2018_production_1 <- production_raw_data %>% filter(grepl("11.2018", tarih))
+nov_daily_2018_production <- ddply(nov2018_production_1,"tarih",numcolwise(sum))
+November_2018_Production <- colSums(Filter(is.numeric, nov2018_production_1))
+nov_monthly_2018_production <- as.data.frame(November_2018_Production)
+
+dec2018_production_1 <- production_raw_data %>% filter(grepl("12.2018", tarih))
+dec_daily_2018_production <- ddply(dec2018_production_1,"tarih",numcolwise(sum))
+December_2018_Production <- colSums(Filter(is.numeric, dec2018_production_1))
+dec_monthly_2018_production <- as.data.frame(December_2018_Production)
+
+Production_2018_Monthly <- cbind(jan_monthly_2018_production, feb_monthly_2018_production, mar_monthly_2018_production, apr_monthly_2018_production, may_monthly_2018_production, jun_monthly_2018_production, jul_monthly_2018_production, aug_monthly_2018_production, sep_monthly_2018_production, oct_monthly_2018_production, nov_monthly_2018_production, dec_monthly_2018_production)
+
+jan2019_production_1 <- production_raw_data %>% filter(grepl("01.2019", tarih))
+jan_daily_2019_production <- ddply(jan2019_production_1,"tarih",numcolwise(sum))
+January_2019_Production <- colSums(Filter(is.numeric, jan2019_production_1))
+jan_monthly_2019_production <- as.data.frame(January_2019_Production)
+
+feb2019_production_1 <- production_raw_data %>% filter(grepl("02.2019", tarih))
+feb_daily_2019_production <- ddply(feb2019_production_1,"tarih",numcolwise(sum))
+February_2019_Production <- colSums(Filter(is.numeric, feb2019_production_1))
+feb_monthly_2019_production <- as.data.frame(February_2019_Production)
+
+mar2019_production_1 <- production_raw_data %>% filter(grepl("03.2019", tarih))
+mar_daily_2019_production <- ddply(jan2019_production_1,"tarih",numcolwise(sum))
+March_2019_Production <- colSums(Filter(is.numeric, mar2019_production_1))
+mar_monthly_2019_production <- as.data.frame(March_2019_Production)
+
+apr2019_production_1 <- production_raw_data %>% filter(grepl("04.2019", tarih))
+apr_daily_2019_production <- ddply(apr2019_production_1,"tarih",numcolwise(sum))
+April_2019_Production <- colSums(Filter(is.numeric, apr2019_production_1))
+apr_monthly_2019_production <- as.data.frame(April_2019_Production)
+
+may2019_production_1 <- production_raw_data %>% filter(grepl("05.2019", tarih))
+may_daily_2019_production <- ddply(may2019_production_1,"tarih",numcolwise(sum))
+May_2019_Production <- colSums(Filter(is.numeric, may2019_production_1))
+may_monthly_2019_production <- as.data.frame(May_2019_Production)
+
+jun2019_production_1 <- production_raw_data %>% filter(grepl("06.2019", tarih))
+jun_daily_2019_production <- ddply(jun2019_production_1,"tarih",numcolwise(sum))
+June_2019_Production <- colSums(Filter(is.numeric, jun2019_production_1))
+jun_monthly_2019_production <- as.data.frame(June_2019_Production)
+
+jul2019_production_1 <- production_raw_data %>% filter(grepl("07.2019", tarih))
+jul_daily_2019_production <- ddply(jul2019_production_1,"tarih",numcolwise(sum))
+July_2019_Production <- colSums(Filter(is.numeric, jul2019_production_1))
+jul_monthly_2019_production <- as.data.frame(July_2019_Production)
+
+aug2019_production_1 <- production_raw_data %>% filter(grepl("08.2019", tarih))
+aug_daily_2019_production <- ddply(aug2019_production_1,"tarih",numcolwise(sum))
+August_2019_Production <- colSums(Filter(is.numeric, aug2019_production_1))
+aug_monthly_2019_production <- as.data.frame(August_2019_Production)
+
+sep2019_production_1 <- production_raw_data %>% filter(grepl("09.2019", tarih))
+sep_daily_2019_production <- ddply(sep2019_production_1,"tarih",numcolwise(sum))
+September_2019_Production <- colSums(Filter(is.numeric, sep2019_production_1))
+sep_monthly_2019_production <- as.data.frame(September_2019_Production)
+
+oct2019_production_1 <- production_raw_data %>% filter(grepl("10.2019", tarih))
+oct_daily_2019_production <- ddply(oct2019_production_1,"tarih",numcolwise(sum))
+October_2019_Production <- colSums(Filter(is.numeric, oct2019_production_1))
+oct_monthly_2019_production <- as.data.frame(October_2019_Production)
+
+Production_2019_Monthly <- cbind(jan_monthly_2019_production, feb_monthly_2019_production, mar_monthly_2019_production, apr_monthly_2019_production, may_monthly_2019_production, jun_monthly_2019_production, jul_monthly_2019_production, aug_monthly_2019_production, sep_monthly_2019_production, oct_monthly_2019_production)
+
+Production_Monthly <- cbind(Production_2016_Monthly, Production_2017_Monthly, Production_2018_Monthly, Production_2019_Monthly)
+Production_Monthly <- rownames_to_column(Production_Monthly, var = "Sources")
+
+head(Production_Monthly, 5)
+```
+
+## Creating Monthly Sums for Consumption
+
+```{r}
+jan2016_consumption_1 <- consumption_raw_data %>% filter(grepl("01.2016", tarih))
+jan_daily_2016_consumption <- ddply(jan2016_consumption_1,"tarih",numcolwise(sum))
+January_2016_Consumption <- colSums(Filter(is.numeric, jan2016_consumption_1))
+jan_monthly_2016_consumption <- as.data.frame(January_2016_Consumption)
+
+feb2016_consumption_1 <- consumption_raw_data %>% filter(grepl("02.2016", tarih))
+feb_daily_2016_consumption <- ddply(feb2016_consumption_1,"tarih",numcolwise(sum))
+February_2016_Consumption <- colSums(Filter(is.numeric, feb2016_consumption_1))
+feb_monthly_2016_consumption <- as.data.frame(February_2016_Consumption)
+
+mar2016_consumption_1 <- consumption_raw_data %>% filter(grepl("03.2016", tarih))
+mar_daily_2016_consumption <- ddply(jan2016_consumption_1,"tarih",numcolwise(sum))
+March_2016_Consumption <- colSums(Filter(is.numeric, mar2016_consumption_1))
+mar_monthly_2016_consumption <- as.data.frame(March_2016_Consumption)
+
+apr2016_consumption_1 <- consumption_raw_data %>% filter(grepl("04.2016", tarih))
+apr_daily_2016_consumption <- ddply(apr2016_consumption_1,"tarih",numcolwise(sum))
+April_2016_Consumption <- colSums(Filter(is.numeric, apr2016_consumption_1))
+apr_monthly_2016_consumption <- as.data.frame(April_2016_Consumption)
+
+may2016_consumption_1 <- consumption_raw_data %>% filter(grepl("05.2016", tarih))
+may_daily_2016_consumption <- ddply(may2016_consumption_1,"tarih",numcolwise(sum))
+May_2016_Consumption <- colSums(Filter(is.numeric, may2016_consumption_1))
+may_monthly_2016_consumption <- as.data.frame(May_2016_Consumption)
+
+jun2016_consumption_1 <- consumption_raw_data %>% filter(grepl("06.2016", tarih))
+jun_daily_2016_consumption <- ddply(jun2016_consumption_1,"tarih",numcolwise(sum))
+June_2016_Consumption <- colSums(Filter(is.numeric, jun2016_consumption_1))
+jun_monthly_2016_consumption <- as.data.frame(June_2016_Consumption)
+
+jul2016_consumption_1 <- consumption_raw_data %>% filter(grepl("07.2016", tarih))
+jul_daily_2016_consumption <- ddply(jul2016_consumption_1,"tarih",numcolwise(sum))
+July_2016_Consumption <- colSums(Filter(is.numeric, jul2016_consumption_1))
+jul_monthly_2016_consumption <- as.data.frame(July_2016_Consumption)
+
+aug2016_consumption_1 <- consumption_raw_data %>% filter(grepl("08.2016", tarih))
+aug_daily_2016_consumption <- ddply(aug2016_consumption_1,"tarih",numcolwise(sum))
+August_2016_Consumption <- colSums(Filter(is.numeric, aug2016_consumption_1))
+aug_monthly_2016_consumption <- as.data.frame(August_2016_Consumption)
+
+sep2016_consumption_1 <- consumption_raw_data %>% filter(grepl("09.2016", tarih))
+sep_daily_2016_consumption <- ddply(sep2016_consumption_1,"tarih",numcolwise(sum))
+September_2016_Consumption <- colSums(Filter(is.numeric, sep2016_consumption_1))
+sep_monthly_2016_consumption <- as.data.frame(September_2016_Consumption)
+
+oct2016_consumption_1 <- consumption_raw_data %>% filter(grepl("10.2016", tarih))
+oct_daily_2016_consumption <- ddply(oct2016_consumption_1,"tarih",numcolwise(sum))
+October_2016_Consumption <- colSums(Filter(is.numeric, oct2016_consumption_1))
+oct_monthly_2016_consumption <- as.data.frame(October_2016_Consumption)
+
+nov2016_consumption_1 <- consumption_raw_data %>% filter(grepl("11.2016", tarih))
+nov_daily_2016_consumption <- ddply(nov2016_consumption_1,"tarih",numcolwise(sum))
+November_2016_Consumption <- colSums(Filter(is.numeric, nov2016_consumption_1))
+nov_monthly_2016_consumption <- as.data.frame(November_2016_Consumption)
+
+dec2016_consumption_1 <- consumption_raw_data %>% filter(grepl("12.2016", tarih))
+dec_daily_2016_consumption <- ddply(dec2016_consumption_1,"tarih",numcolwise(sum))
+December_2016_Consumption <- colSums(Filter(is.numeric, dec2016_consumption_1))
+dec_monthly_2016_consumption <- as.data.frame(December_2016_Consumption)
+
+Consumption_2016_Monthly <- cbind(jan_monthly_2016_consumption, feb_monthly_2016_consumption, mar_monthly_2016_consumption, apr_monthly_2016_consumption, may_monthly_2016_consumption, jun_monthly_2016_consumption, jul_monthly_2016_consumption, aug_monthly_2016_consumption, sep_monthly_2016_consumption, oct_monthly_2016_consumption, nov_monthly_2016_consumption, dec_monthly_2016_consumption)
+
+jan2017_consumption_1 <- consumption_raw_data %>% filter(grepl("01.2017", tarih))
+jan_daily_2017_consumption <- ddply(jan2017_consumption_1,"tarih",numcolwise(sum))
+January_2017_Consumption <- colSums(Filter(is.numeric, jan2017_consumption_1))
+jan_monthly_2017_consumption <- as.data.frame(January_2017_Consumption)
+
+feb2017_consumption_1 <- consumption_raw_data %>% filter(grepl("02.2017", tarih))
+feb_daily_2017_consumption <- ddply(feb2017_consumption_1,"tarih",numcolwise(sum))
+February_2017_Consumption <- colSums(Filter(is.numeric, feb2017_consumption_1))
+feb_monthly_2017_consumption <- as.data.frame(February_2017_Consumption)
+
+mar2017_consumption_1 <- consumption_raw_data %>% filter(grepl("03.2017", tarih))
+mar_daily_2017_consumption <- ddply(jan2017_consumption_1,"tarih",numcolwise(sum))
+March_2017_Consumption <- colSums(Filter(is.numeric, mar2017_consumption_1))
+mar_monthly_2017_consumption <- as.data.frame(March_2017_Consumption)
+
+apr2017_consumption_1 <- consumption_raw_data %>% filter(grepl("04.2017", tarih))
+apr_daily_2017_consumption <- ddply(apr2017_consumption_1,"tarih",numcolwise(sum))
+April_2017_Consumption <- colSums(Filter(is.numeric, apr2017_consumption_1))
+apr_monthly_2017_consumption <- as.data.frame(April_2017_Consumption)
+
+may2017_consumption_1 <- consumption_raw_data %>% filter(grepl("05.2017", tarih))
+may_daily_2017_consumption <- ddply(may2017_consumption_1,"tarih",numcolwise(sum))
+May_2017_Consumption <- colSums(Filter(is.numeric, may2017_consumption_1))
+may_monthly_2017_consumption <- as.data.frame(May_2017_Consumption)
+
+jun2017_consumption_1 <- consumption_raw_data %>% filter(grepl("06.2017", tarih))
+jun_daily_2017_consumption <- ddply(jun2017_consumption_1,"tarih",numcolwise(sum))
+June_2017_Consumption <- colSums(Filter(is.numeric, jun2017_consumption_1))
+jun_monthly_2017_consumption <- as.data.frame(June_2017_Consumption)
+
+jul2017_consumption_1 <- consumption_raw_data %>% filter(grepl("07.2017", tarih))
+jul_daily_2017_consumption <- ddply(jul2017_consumption_1,"tarih",numcolwise(sum))
+July_2017_Consumption <- colSums(Filter(is.numeric, jul2017_consumption_1))
+jul_monthly_2017_consumption <- as.data.frame(July_2017_Consumption)
+
+aug2017_consumption_1 <- consumption_raw_data %>% filter(grepl("08.2017", tarih))
+aug_daily_2017_consumption <- ddply(aug2017_consumption_1,"tarih",numcolwise(sum))
+August_2017_Consumption <- colSums(Filter(is.numeric, aug2017_consumption_1))
+aug_monthly_2017_consumption <- as.data.frame(August_2017_Consumption)
+
+sep2017_consumption_1 <- consumption_raw_data %>% filter(grepl("09.2017", tarih))
+sep_daily_2017_consumption <- ddply(sep2017_consumption_1,"tarih",numcolwise(sum))
+September_2017_Consumption <- colSums(Filter(is.numeric, sep2017_consumption_1))
+sep_monthly_2017_consumption <- as.data.frame(September_2017_Consumption)
+
+oct2017_consumption_1 <- consumption_raw_data %>% filter(grepl("10.2017", tarih))
+oct_daily_2017_consumption <- ddply(oct2017_consumption_1,"tarih",numcolwise(sum))
+October_2017_Consumption <- colSums(Filter(is.numeric, oct2017_consumption_1))
+oct_monthly_2017_consumption <- as.data.frame(October_2017_Consumption)
+
+nov2017_consumption_1 <- consumption_raw_data %>% filter(grepl("11.2017", tarih))
+nov_daily_2017_consumption <- ddply(nov2017_consumption_1,"tarih",numcolwise(sum))
+November_2017_Consumption <- colSums(Filter(is.numeric, nov2017_consumption_1))
+nov_monthly_2017_consumption <- as.data.frame(November_2017_Consumption)
+
+dec2017_consumption_1 <- consumption_raw_data %>% filter(grepl("12.2017", tarih))
+dec_daily_2017_consumption <- ddply(dec2017_consumption_1,"tarih",numcolwise(sum))
+December_2017_Consumption <- colSums(Filter(is.numeric, dec2017_consumption_1))
+dec_monthly_2017_consumption <- as.data.frame(December_2017_Consumption)
+
+Consumption_2017_Monthly <- cbind(jan_monthly_2017_consumption, feb_monthly_2017_consumption, mar_monthly_2017_consumption, apr_monthly_2017_consumption, may_monthly_2017_consumption, jun_monthly_2017_consumption, jul_monthly_2017_consumption, aug_monthly_2017_consumption, sep_monthly_2017_consumption, oct_monthly_2017_consumption, nov_monthly_2017_consumption, dec_monthly_2017_consumption)
+
+jan2018_consumption_1 <- consumption_raw_data %>% filter(grepl("01.2018", tarih))
+jan_daily_2018_consumption <- ddply(jan2018_consumption_1,"tarih",numcolwise(sum))
+January_2018_Consumption <- colSums(Filter(is.numeric, jan2018_consumption_1))
+jan_monthly_2018_consumption <- as.data.frame(January_2018_Consumption)
+
+feb2018_consumption_1 <- consumption_raw_data %>% filter(grepl("02.2018", tarih))
+feb_daily_2018_consumption <- ddply(feb2018_consumption_1,"tarih",numcolwise(sum))
+February_2018_Consumption <- colSums(Filter(is.numeric, feb2018_consumption_1))
+feb_monthly_2018_consumption <- as.data.frame(February_2018_Consumption)
+
+mar2018_consumption_1 <- consumption_raw_data %>% filter(grepl("03.2018", tarih))
+mar_daily_2018_consumption <- ddply(jan2018_consumption_1,"tarih",numcolwise(sum))
+March_2018_Consumption <- colSums(Filter(is.numeric, mar2018_consumption_1))
+mar_monthly_2018_consumption <- as.data.frame(March_2018_Consumption)
+
+apr2018_consumption_1 <- consumption_raw_data %>% filter(grepl("04.2018", tarih))
+apr_daily_2018_consumption <- ddply(apr2018_consumption_1,"tarih",numcolwise(sum))
+April_2018_Consumption <- colSums(Filter(is.numeric, apr2018_consumption_1))
+apr_monthly_2018_consumption <- as.data.frame(April_2018_Consumption)
+
+may2018_consumption_1 <- consumption_raw_data %>% filter(grepl("05.2018", tarih))
+may_daily_2018_consumption <- ddply(may2018_consumption_1,"tarih",numcolwise(sum))
+May_2018_Consumption <- colSums(Filter(is.numeric, may2018_consumption_1))
+may_monthly_2018_consumption <- as.data.frame(May_2018_Consumption)
+
+jun2018_consumption_1 <- consumption_raw_data %>% filter(grepl("06.2018", tarih))
+jun_daily_2018_consumption <- ddply(jun2018_consumption_1,"tarih",numcolwise(sum))
+June_2018_Consumption <- colSums(Filter(is.numeric, jun2018_consumption_1))
+jun_monthly_2018_consumption <- as.data.frame(June_2018_Consumption)
+
+jul2018_consumption_1 <- consumption_raw_data %>% filter(grepl("07.2018", tarih))
+jul_daily_2018_consumption <- ddply(jul2018_consumption_1,"tarih",numcolwise(sum))
+July_2018_Consumption <- colSums(Filter(is.numeric, jul2018_consumption_1))
+jul_monthly_2018_consumption <- as.data.frame(July_2018_Consumption)
+
+aug2018_consumption_1 <- consumption_raw_data %>% filter(grepl("08.2018", tarih))
+aug_daily_2018_consumption <- ddply(aug2018_consumption_1,"tarih",numcolwise(sum))
+August_2018_Consumption <- colSums(Filter(is.numeric, aug2018_consumption_1))
+aug_monthly_2018_consumption <- as.data.frame(August_2018_Consumption)
+
+sep2018_consumption_1 <- consumption_raw_data %>% filter(grepl("09.2018", tarih))
+sep_daily_2018_consumption <- ddply(sep2018_consumption_1,"tarih",numcolwise(sum))
+September_2018_Consumption <- colSums(Filter(is.numeric, sep2018_consumption_1))
+sep_monthly_2018_consumption <- as.data.frame(September_2018_Consumption)
+
+oct2018_consumption_1 <- consumption_raw_data %>% filter(grepl("10.2018", tarih))
+oct_daily_2018_consumption <- ddply(oct2018_consumption_1,"tarih",numcolwise(sum))
+October_2018_Consumption <- colSums(Filter(is.numeric, oct2018_consumption_1))
+oct_monthly_2018_consumption <- as.data.frame(October_2018_Consumption)
+
+nov2018_consumption_1 <- consumption_raw_data %>% filter(grepl("11.2018", tarih))
+nov_daily_2018_consumption <- ddply(nov2018_consumption_1,"tarih",numcolwise(sum))
+November_2018_Consumption <- colSums(Filter(is.numeric, nov2018_consumption_1))
+nov_monthly_2018_consumption <- as.data.frame(November_2018_Consumption)
+
+dec2018_consumption_1 <- consumption_raw_data %>% filter(grepl("12.2018", tarih))
+dec_daily_2018_consumption <- ddply(dec2018_consumption_1,"tarih",numcolwise(sum))
+December_2018_Consumption <- colSums(Filter(is.numeric, dec2018_consumption_1))
+dec_monthly_2018_consumption <- as.data.frame(December_2018_Consumption)
+
+Consumption_2018_Monthly <- cbind(jan_monthly_2018_consumption, feb_monthly_2018_consumption, mar_monthly_2018_consumption, apr_monthly_2018_consumption, may_monthly_2018_consumption, jun_monthly_2018_consumption, jul_monthly_2018_consumption, aug_monthly_2018_consumption, sep_monthly_2018_consumption, oct_monthly_2018_consumption, nov_monthly_2018_consumption, dec_monthly_2018_consumption)
+
+jan2019_consumption_1 <- consumption_raw_data %>% filter(grepl("01.2019", tarih))
+jan_daily_2019_consumption <- ddply(jan2019_consumption_1,"tarih",numcolwise(sum))
+January_2019_Consumption <- colSums(Filter(is.numeric, jan2019_consumption_1))
+jan_monthly_2019_consumption <- as.data.frame(January_2019_Consumption)
+
+feb2019_consumption_1 <- consumption_raw_data %>% filter(grepl("02.2019", tarih))
+feb_daily_2019_consumption <- ddply(feb2019_consumption_1,"tarih",numcolwise(sum))
+February_2019_Consumption <- colSums(Filter(is.numeric, feb2019_consumption_1))
+feb_monthly_2019_consumption <- as.data.frame(February_2019_Consumption)
+
+mar2019_consumption_1 <- consumption_raw_data %>% filter(grepl("03.2019", tarih))
+mar_daily_2019_consumption <- ddply(jan2019_consumption_1,"tarih",numcolwise(sum))
+March_2019_Consumption <- colSums(Filter(is.numeric, mar2019_consumption_1))
+mar_monthly_2019_consumption <- as.data.frame(March_2019_Consumption)
+
+apr2019_consumption_1 <- consumption_raw_data %>% filter(grepl("04.2019", tarih))
+apr_daily_2019_consumption <- ddply(apr2019_consumption_1,"tarih",numcolwise(sum))
+April_2019_Consumption <- colSums(Filter(is.numeric, apr2019_consumption_1))
+apr_monthly_2019_consumption <- as.data.frame(April_2019_Consumption)
+
+may2019_consumption_1 <- consumption_raw_data %>% filter(grepl("05.2019", tarih))
+may_daily_2019_consumption <- ddply(may2019_consumption_1,"tarih",numcolwise(sum))
+May_2019_Consumption <- colSums(Filter(is.numeric, may2019_consumption_1))
+may_monthly_2019_consumption <- as.data.frame(May_2019_Consumption)
+
+jun2019_consumption_1 <- consumption_raw_data %>% filter(grepl("06.2019", tarih))
+jun_daily_2019_consumption <- ddply(jun2019_consumption_1,"tarih",numcolwise(sum))
+June_2019_Consumption <- colSums(Filter(is.numeric, jun2019_consumption_1))
+jun_monthly_2019_consumption <- as.data.frame(June_2019_Consumption)
+
+jul2019_consumption_1 <- consumption_raw_data %>% filter(grepl("07.2019", tarih))
+jul_daily_2019_consumption <- ddply(jul2019_consumption_1,"tarih",numcolwise(sum))
+July_2019_Consumption <- colSums(Filter(is.numeric, jul2019_consumption_1))
+jul_monthly_2019_consumption <- as.data.frame(July_2019_Consumption)
+
+aug2019_consumption_1 <- consumption_raw_data %>% filter(grepl("08.2019", tarih))
+aug_daily_2019_consumption <- ddply(aug2019_consumption_1,"tarih",numcolwise(sum))
+August_2019_Consumption <- colSums(Filter(is.numeric, aug2019_consumption_1))
+aug_monthly_2019_consumption <- as.data.frame(August_2019_Consumption)
+
+sep2019_consumption_1 <- consumption_raw_data %>% filter(grepl("09.2019", tarih))
+sep_daily_2019_consumption <- ddply(sep2019_consumption_1,"tarih",numcolwise(sum))
+September_2019_Consumption <- colSums(Filter(is.numeric, sep2019_consumption_1))
+sep_monthly_2019_consumption <- as.data.frame(September_2019_Consumption)
+
+oct2019_consumption_1 <- consumption_raw_data %>% filter(grepl("10.2019", tarih))
+oct_daily_2019_consumption <- ddply(oct2019_consumption_1,"tarih",numcolwise(sum))
+October_2019_Consumption <- colSums(Filter(is.numeric, oct2019_consumption_1))
+oct_monthly_2019_consumption <- as.data.frame(October_2019_Consumption)
+
+Consumption_2019_Monthly <- cbind(jan_monthly_2019_consumption, feb_monthly_2019_consumption, mar_monthly_2019_consumption, apr_monthly_2019_consumption, may_monthly_2019_consumption, jun_monthly_2019_consumption, jul_monthly_2019_consumption, aug_monthly_2019_consumption, sep_monthly_2019_consumption, oct_monthly_2019_consumption)
+
+Consumption_Monthly <- cbind(Consumption_2016_Monthly, Consumption_2017_Monthly, Consumption_2018_Monthly, Consumption_2019_Monthly)
+Consumption_Monthly <- rownames_to_column(Consumption_Monthly, var = "Sources")
+
+head(Consumption_Monthly, 10)
+```
+
+```{r}
+colnames(Planning_Monthly) <-  c('Sources', 'January_16', 'February_16', 'March_16', 'April_16', 'May_16', 'June_16', 'July_16', 'August_16', 'September_16', 'October_16', 'November_16', 'December_16', 'January_17', 'February_17', 'March_17', 'April_17', 'May_17', 'June_17', 'July_17', 'August_17', 'September_17', 'October_17', 'November_17', 'December_17', 'January_18', 'February_18', 'March_18', 'April_18', 'May_18', 'June_18', 'July_18', 'August_18', 'September_18', 'October_18', 'November_18', 'December_18', 'January_19', 'February_19', 'March_19', 'April_19', 'May_19', 'June_19', 'July_19', 'August_19', 'September_19', 'October_19')
+
+colnames(Production_Monthly) <-  c('Sources', 'January_16', 'February_16', 'March_16', 'April_16', 'May_16', 'June_16', 'July_16', 'August_16', 'September_16', 'October_16', 'November_16', 'December_16', 'January_17', 'February_17', 'March_17', 'April_17', 'May_17', 'June_17', 'July_17', 'August_17', 'September_17', 'October_17', 'November_17', 'December_17', 'January_18', 'February_18', 'March_18', 'April_18', 'May_18', 'June_18', 'July_18', 'August_18', 'September_18', 'October_18', 'November_18', 'December_18', 'January_19', 'February_19', 'March_19', 'April_19', 'May_19', 'June_19', 'July_19', 'August_19', 'September_19', 'October_19')
+
+colnames(Consumption_Monthly) <-  c('Sources', 'January_16', 'February_16', 'March_16', 'April_16', 'May_16', 'June_16', 'July_16', 'August_16', 'September_16', 'October_16', 'November_16', 'December_16', 'January_17', 'February_17', 'March_17', 'April_17', 'May_17', 'June_17', 'July_17', 'August_17', 'September_17', 'October_17', 'November_17', 'December_17', 'January_18', 'February_18', 'March_18', 'April_18', 'May_18', 'June_18', 'July_18', 'August_18', 'September_18', 'October_18', 'November_18', 'December_18', 'January_19', 'February_19', 'March_19', 'April_19', 'May_19', 'June_19', 'July_19', 'August_19', 'September_19', 'October_19')
+```
+
+## Comparison of Planning and Actual Production
+
+When the data obtained since 2016 are analyzed, it is seen that the actual production is above the planned production in the whole process.
+
+While there are significant differences between the two values in the first 4 months of 2016, it is observed that these differences have decreased in the continuation of the process.
+
+### Comparison of Total Planned Production (MWh) and Total Actual Production (MWh)
+
+```{r}
+Plan_MT <- subset(Planning_Monthly, Sources=="toplam_mwh")
+Plan_MT <- as.data.frame(transpose(Plan_MT))
+Prod_MT <- subset(Production_Monthly, Sources=="toplam_mwh")
+Prod_MT <- as.data.frame(transpose(Prod_MT))
+CompPlanProd <- cbind(Plan_MT, Prod_MT)
+colnames(CompPlanProd) <- c('Planned_Production', 'Actual_Production') 
+CompPlanProd <- CompPlanProd[-1,]
+CompPlanProd$Dates <-  c('16_01', '16_02', '16_03', '16_04', '16_05', '16_06', '16_07', '16_08', '16_09', '16_10', '16_11', '16_12', '17_01', '17_02', '17_03', '17_04', '17_05', '17_06', '17_07', '17_08', '17_09', '17_10', '17_11', '17_12', '18_01', '18_02', '18_03', '18_04', '18_05', '18_06', '18_07', '18_08', '18_09', '18_10', '18_11', '18_12', '19_01', '19_02', '19_03', '19_04', '19_05', '19_06', '19_07', '19_08', '19_09', '19_10')
+CompPlanProd$Planned_Production <-as.numeric(CompPlanProd$Planned_Production)
+CompPlanProd$Actual_Production <-as.numeric(CompPlanProd$Actual_Production)
+
+head(CompPlanProd, 5)
+```
+
+```{r}
+library(ggplot2)
+library(reshape2)
+G_CompPlanProd <- melt(CompPlanProd, id.vars="Dates")
+
+ggplot(G_CompPlanProd, aes(value/1000000, Dates, col=variable)) + 
+  geom_point() + 
+  stat_smooth() +
+  geom_line( color="grey") +
+labs(title="Comparison of Planned and Actual Productions", 
+       subtitle="Production in MWh (and x1M)",
+     x="Production (MWh) (x1M)",
+     y="Dates",
+     col="Planned vs Actual") 
+```
+
+```{r}
+CompPlanProd_2<-data.frame(CompPlanProd)
+CompPlanProd_2$Difference <- (CompPlanProd_2$Actual_Production - CompPlanProd_2$Planned_Production)/1000000
+CompPlanProdDiff <- CompPlanProd_2 %>% select(Dates, Difference)
+
+CompPlanProdDiff <- CompPlanProdDiff %>% 
+  mutate(mycolor = ifelse(CompPlanProdDiff$Difference>0, "type1", "type2"))
+
+ggplot(CompPlanProdDiff, aes(x=CompPlanProdDiff$Dates, y=CompPlanProdDiff$Difference)) +
+  geom_segment( aes(x=CompPlanProdDiff$Dates, xend=CompPlanProdDiff$Dates, y=0, yend=CompPlanProdDiff$Difference, color=mycolor), size=1.3, alpha=0.9) +
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+  ) +
+  xlab("Dates") +
+  ylab("Actual Production - Planned Production (MWh) (x1M)")
+```
+
+### Comparison of Planned Production (MWh) and Actual Production (MWh) for Sources
+
+```{r warning=FALSE,message=FALSE}
+Production_Monthly_Trp <- as.data.frame(transpose(Production_Monthly))
+colnames(Production_Monthly_Trp) <- c('toplam_mwh',	'dogal_gaz',	'barajli',	'linyit',	'akarsu',	'ithal_komur',	'ruzgar',	'gunes',	'fuel_oil', 'jeotermal',	'asfaltit_komur',	'tas_komur',	'biyokutle',	'nafta',	'lng',	'uluslararasi')
+Production_Monthly_Trp[] <- lapply(Production_Monthly_Trp, function(x) as.numeric(as.character(x)))
+Production_Monthly_Trp$Dates <-  c('Sources', '16_01', '16_02', '16_03', '16_04', '16_05', '16_06', '16_07', '16_08', '16_09', '16_10', '16_11', '16_12', '17_01', '17_02', '17_03', '17_04', '17_05', '17_06', '17_07', '17_08', '17_09', '17_10', '17_11', '17_12', '18_01', '18_02', '18_03', '18_04', '18_05', '18_06', '18_07', '18_08', '18_09', '18_10', '18_11', '18_12', '19_01', '19_02', '19_03', '19_04', '19_05', '19_06', '19_07', '19_08', '19_09', '19_10')
+Production_Monthly_Trp <- Production_Monthly_Trp[-1,]
+Production_Monthly_Trp <- Production_Monthly_Trp[,-1]
+
+head(Production_Monthly_Trp,5)
+```
+
+```{r warning=FALSE,message=FALSE}
+Planning_Monthly_Trp <- as.data.frame(transpose(Planning_Monthly))
+colnames(Planning_Monthly_Trp) <- c('toplam_mwh',	'dogal_gaz',	'ruzgar',	'linyit',	'tas_komur',	'ithal_komur', 'fuel_oil', 'jeotermal',	'barajli',	'nafta', 'biyokutle',	'akarsu',	'diger')
+Planning_Monthly_Trp[] <- lapply(Planning_Monthly_Trp, function(x) as.numeric(as.character(x)))
+Planning_Monthly_Trp$Dates <-  c('Sources', '16_01', '16_02', '16_03', '16_04', '16_05', '16_06', '16_07', '16_08', '16_09', '16_10', '16_11', '16_12', '17_01', '17_02', '17_03', '17_04', '17_05', '17_06', '17_07', '17_08', '17_09', '17_10', '17_11', '17_12', '18_01', '18_02', '18_03', '18_04', '18_05', '18_06', '18_07', '18_08', '18_09', '18_10', '18_11', '18_12', '19_01', '19_02', '19_03', '19_04', '19_05', '19_06', '19_07', '19_08', '19_09', '19_10')
+Planning_Monthly_Trp <- Planning_Monthly_Trp[-1,]
+Planning_Monthly_Trp <- Planning_Monthly_Trp[,-1]
+
+head(Planning_Monthly_Trp,5)
+```
+
+```{r}
+PlanProdSources <- as.data.frame(c(1:46))
+PlanProdSources$Dates <- Planning_Monthly_Trp$Dates
+PlanProdSources$Barajlı <- (Production_Monthly_Trp$barajli - Planning_Monthly_Trp$barajli)
+PlanProdSources$Linyit <- (Production_Monthly_Trp$linyit - Planning_Monthly_Trp$linyit)
+PlanProdSources$Akarsu <- (Production_Monthly_Trp$akarsu - Planning_Monthly_Trp$akarsu)
+PlanProdSources$Ithal_Komur <- (Production_Monthly_Trp$ithal_komur - Planning_Monthly_Trp$ithal_komur)
+PlanProdSources$Ruzgar <- (Production_Monthly_Trp$ruzgar - Planning_Monthly_Trp$ruzgar)
+PlanProdSources$Fuel_Oil <- (Production_Monthly_Trp$fuel_oil - Planning_Monthly_Trp$fuel_oil)
+PlanProdSources$Jeotermal <- (Production_Monthly_Trp$jeotermal - Planning_Monthly_Trp$jeotermal)
+PlanProdSources$Taskomur <- (Production_Monthly_Trp$tas_komur - Planning_Monthly_Trp$tas_komur)
+PlanProdSources$Biyokutle <- (Production_Monthly_Trp$biyokutle - Planning_Monthly_Trp$biyokutle)
+PlanProdSources <- PlanProdSources[,-1]
+
+head(PlanProdSources,5)
+```
+
+When the differences between actual production and planned production values are analyzed by source; It is seen that there are no significant differences between the two values in Geothermal, Biomass, Fuel Oil sources, but there are differences between plan and production in sources such as Dams, Stream and Lignite.
+
+```{r}
+library(ggplot2)
+library(reshape2)
+G_PlanProdSources <- melt(PlanProdSources, id.vars="Dates")
+colnames(G_PlanProdSources) <- c('Dates',	'Source',	'Prod_Plan_Difference')
+ggplot(data = G_PlanProdSources, aes(x = Dates , y = Prod_Plan_Difference/1000000, group = 1)) +
+    geom_line() +
+    facet_wrap(~ Source) +
+    labs(subtitle = "Difference Between Actual Production and Planned Production by Sources", y="Actual Production - Planned Production (MWh) (x1M)", x="Dates")
+```
+
+## Comparison of Production and Consumption
+
+When real production and consumption values are compared, it is seen that consumption values are higher than production values. In the 46-month period from the beginning of 2016 to October 2019, it was found that only 6 months (listed below) Production value was higher than Consumption value and consumption was higher than production in all remaining months;
+
+* March 2016
+* April 2017
+* May 2017
+* October 2017
+* November 2017
+* December 2017
+
+```{r}
+Con_MT <- subset(Consumption_Monthly, Sources=="tuketim_miktari_mwh")
+Con_MT <- as.data.frame(transpose(Con_MT))
+CompProdCon <- cbind(Prod_MT, Con_MT)
+colnames(CompProdCon) <- c('Actual_Production', 'Consumption')
+CompProdCon <- CompProdCon[-1,]
+CompProdCon$Dates <-  c('16_01', '16_02', '16_03', '16_04', '16_05', '16_06', '16_07', '16_08', '16_09', '16_10', '16_11', '16_12', '17_01', '17_02', '17_03', '17_04', '17_05', '17_06', '17_07', '17_08', '17_09', '17_10', '17_11', '17_12', '18_01', '18_02', '18_03', '18_04', '18_05', '18_06', '18_07', '18_08', '18_09', '18_10', '18_11', '18_12', '19_01', '19_02', '19_03', '19_04', '19_05', '19_06', '19_07', '19_08', '19_09', '19_10')
+CompProdCon$Actual_Production <-as.numeric(CompProdCon$Actual_Production)
+CompProdCon$Consumption <-as.numeric(CompProdCon$Consumption)
+
+head(CompProdCon,5)
+```
+
+```{r}
+library(ggplot2)
+library(reshape2)
+G_CompProdCon <- melt(CompProdCon, id.vars="Dates")
+
+ggplot(G_CompProdCon, aes(value/1000000, Dates, col=variable)) + 
+  geom_point() + 
+  stat_smooth() +
+  geom_line( color="grey") +
+labs(title="Comparison of Actual Production and Comsumption", 
+       subtitle="in MWh (and x1M)",
+     x="MWh (x1M)",
+     y="Dates",
+     col="Production vs Consumption") 
+```
+
+```{r}
+CompProdCon_2<-data.frame(CompProdCon)
+CompProdCon_2$Difference <- (CompProdCon_2$Actual_Production - CompProdCon_2$Consumption)/1000000
+CompProdConDiff <- CompProdCon_2 %>% select(Dates, Difference)
+
+head(CompProdConDiff, 5)
+```
+
+```{r}
+CompProdConDiff <- CompProdConDiff %>% 
+  mutate(mycolor = ifelse(CompProdConDiff$Difference>0, "type1", "type2"))
+
+ggplot(CompProdConDiff, aes(x=CompProdConDiff$Dates, y=CompProdConDiff$Difference)) +
+  geom_segment( aes(x=CompProdConDiff$Dates, xend=CompProdConDiff$Dates, y=0, yend=CompProdConDiff$Difference, color=mycolor), size=1.3, alpha=0.9) +
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+  ) +
+  xlab("Dates") +
+  ylab("Production - Consumption (MWh) (x1M)")
+```
