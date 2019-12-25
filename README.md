@@ -1,5 +1,7 @@
 Hello, 
 
+![oguz-colak-icon](https://user-images.githubusercontent.com/55504780/71450332-2c862d00-2771-11ea-893d-a902c0bb1831.png)
+
 This repository contains my progress on my Big Data Analytics journey. 
 
 I'm at the very beginning of the road and I have a lot to go. For the time being, I will be developing this repository day by day, by adding my personal projects, analysis and/or links to separate repositories for comprehensive personal projects.
