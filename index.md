@@ -13,7 +13,7 @@ I'm at the very beginning of the road and I have a lot to go. For the time being
 
 ----------------------------------------------------------------------------------------
 
-## R
+# R
 
 ### Week 1
 
@@ -36,12 +36,12 @@ For group progress journal, please visit the [Kar'R'sızlar](https://pjournal.gi
 
 ----------------------------------------------------------------------------------------
 
-## Python
+# Python
 
 I will add my projects soon
 
 ----------------------------------------------------------------------------------------
 
-## SQL
+# SQL
 
 I will add my projects soon
