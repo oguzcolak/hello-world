@@ -45,3 +45,9 @@ I will add my projects soon
 # SQL
 
 I will add my projects soon
+
+----------------------------------------------------------------------------------------
+
+# ML
+
+[Azure ML Predictive Analysis](https://oguzcolak.github.io/personal/BDA564-Week4-Task2-OutputValues.html)
